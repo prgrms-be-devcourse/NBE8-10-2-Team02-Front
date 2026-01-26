@@ -26,7 +26,7 @@ export type SimilarGameResponse = {
 export function buildCoverUrl(
   template: string | null,
   size: string,
-  imageId: string | null
+  imageId: string | null,
 ) {
   if (!template || !imageId) return null;
   return template.replace("{size}", size).replace("{id}", imageId);

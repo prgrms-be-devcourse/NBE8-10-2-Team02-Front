@@ -1,5 +1,9 @@
 // src/lib/gameApi.ts
-import { GameDetailResponse, GameVideoResponse, SimilarGameResponse } from "@/type/gameTypes"
+import {
+  GameDetailResponse,
+  GameVideoResponse,
+  SimilarGameResponse,
+} from "@/type/gameTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
@@ -18,5 +22,7 @@ export function getGameVideo(igdbId: number) {
 }
 
 export function getSimilarGames(igdbId: number) {
-  return fetchJson<SimilarGameResponse[]>(`${BASE}/api/v1/games/${igdbId}/similarGames`);
+  return fetchJson<SimilarGameResponse[]>(
+    `${BASE}/api/v1/games/${igdbId}/similarGames`,
+  );
 }
