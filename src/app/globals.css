@@ -1,1 +1,87 @@
 @import "tailwindcss";
+
+.pretty-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.pretty-scrollbar::-webkit-scrollbar {
+  height: 10px;
+}
+.pretty-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pretty-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+}
+.pretty-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+@theme {
+  --color-bg: #0e141b;
+
+  --color-surface-1: #151e27;
+  --color-surface-2: #1b2531;
+  --color-surface-3: #223042;
+
+  --color-border: #273241;
+
+  --color-text-1: #e6edf3;
+  --color-text-2: #a8b3c2;
+  --color-text-3: #7a8797;
+
+  --color-primary: #2f81f7;
+  --color-primary-hover: #3a8bff;
+  --color-primary-active: #2568c7;
+
+  --shadow-focus: 0 0 0 3px rgba(47, 129, 247, 0.35);
+  --radius-sm: 12px;
+  --radius-md: 16px;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text-1;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-1 border border-border rounded-[var(--radius-md)];
+  }
+  .card-hover {
+    @apply hover:bg-surface-2 transition-colors;
+  }
+
+  /* 공통 버튼 */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           rounded-[var(--radius-sm)] font-medium transition-colors select-none
+           focus:outline-none focus:shadow-[var(--shadow-focus)];
+  }
+
+  /* 변형 버튼들: 공통은 여기 넣지 말고 "차이만" */
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-hover active:bg-primary-active;
+  }
+  .btn-secondary {
+    @apply bg-surface-2 text-text-1 border border-border hover:bg-surface-3;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-text-2 hover:bg-white/5;
+  }
+
+  .input {
+    @apply w-full bg-surface-1 border border-border rounded-[var(--radius-sm)]
+           px-3 py-2 text-text-1 placeholder:text-text-3
+           focus:outline-none focus:shadow-[var(--shadow-focus)];
+  }
+}

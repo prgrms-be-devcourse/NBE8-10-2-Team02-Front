@@ -1,3 +1,4 @@
+// src/components/game/GameHero.tsx
 import { buildCoverUrl, GameDetailResponse } from "@/type/gameTypes";
 import Image from "next/image";
 
