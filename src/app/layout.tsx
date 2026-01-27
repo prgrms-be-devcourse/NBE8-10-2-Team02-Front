@@ -28,10 +28,9 @@ export default function RootLayout({
     const isActive = pathname.startsWith(path);
     return `
       group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider transition-all duration-200 active:scale-90
-      ${
-        isActive
-          ? "text-blue-400 bg-blue-500/15 shadow-inner shadow-blue-500/10"
-          : "text-gray-400 hover:text-white hover:bg-white/10"
+      ${isActive
+        ? "text-blue-400 bg-blue-500/15 shadow-inner shadow-blue-500/10"
+        : "text-gray-400 hover:text-white hover:bg-white/10"
       }
     `;
   };
@@ -76,10 +75,13 @@ export default function RootLayout({
                 <span className="absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-0 bg-gray-500 rounded-full transition-all duration-300 group-hover:w-4"></span>
               </button>
 
-              <button className="group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-90">
+              <Link
+                href="/me"
+                className="group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-90"
+              >
                 내 페이지
                 <span className="absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-0 bg-gray-500 rounded-full transition-all duration-300 group-hover:w-4"></span>
-              </button>
+              </Link>
             </nav>
           </div>
 
@@ -95,7 +97,7 @@ export default function RootLayout({
         </header>
 
         {/* 메인 콘텐츠 */}
-        <main className="flex-grow">{children}</main>
+        <main className="flex-grow bg-bg text-text-1">{children}</main>
 
         {/* 푸터 */}
         <footer className="w-full py-14 bg-[#0d0e12] border-t border-white/5 text-gray-600 text-center">

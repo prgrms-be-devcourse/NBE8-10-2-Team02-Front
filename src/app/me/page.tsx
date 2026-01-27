@@ -29,7 +29,7 @@ export default function MePage() {
       try {
         const rs = await getMe();
         setMe(rs.data);
-      } catch (err) {
+      } catch {
         router.push("/auth/login");
       } finally {
         setLoading(false);
@@ -43,12 +43,12 @@ export default function MePage() {
 
     try {
       const rs = await logout();
-      setSuccessMsg(rs.msg || "로그아웃 되었습니다.");
+      // ✅ 홈으로 메시지를 넘겨서 홈에서 보여주기
+      const msg = encodeURIComponent(rs.msg || "로그아웃 되었습니다.");
+      router.push(`/?success=${msg}`);
+      router.refresh();
     } catch (err: any) {
       setErrorMsg(pickMsg(err, "로그아웃에 실패했습니다."));
-    } finally {
-      router.push("/");
-      router.refresh();
     }
   };
 
@@ -90,19 +90,16 @@ export default function MePage() {
     <div className="min-h-[calc(100vh-180px)] bg-bg text-text-1">
       <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8 space-y-6">
         <div className="card p-6">
-          {/* 상단 제목 */}
           <div>
             <div className="text-lg font-semibold">마이페이지</div>
             <div className="mt-1 text-sm text-text-3">내 정보 및 보안 설정</div>
           </div>
 
-          {/* 배너 */}
           <div className="mt-4 space-y-3">
             {errorMsg && <InlineBanner kind="error" message={errorMsg} />}
             {successMsg && <InlineBanner kind="success" message={successMsg} />}
           </div>
 
-          {/* 탭 */}
           <div className="mt-6 flex gap-2 border-b border-border pb-3">
             <button
               className={`btn ${tab === "info" ? "btn-primary" : "btn-ghost"}`}
@@ -120,7 +117,6 @@ export default function MePage() {
             </button>
           </div>
 
-          {/* 컨텐츠 */}
           {tab === "info" ? (
             <div className="mt-6 space-y-3">
               <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
@@ -163,24 +159,23 @@ export default function MePage() {
             </form>
           )}
 
-          {/* ✅ 맨밑 중앙 버튼 */}
           <div className="mt-10 flex justify-center gap-3">
-  <button
-    type="button"
-    onClick={onLogout}
-    className="btn min-w-[140px] bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/25 active:bg-red-500/35"
-  >
-    로그아웃
-  </button>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="btn min-w-[140px] bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/25 active:bg-red-500/35"
+            >
+              로그아웃
+            </button>
 
-  <button
-    type="button"
-    className="btn btn-secondary min-w-[140px]"
-    onClick={() => router.push("/")}
-  >
-    홈으로
-  </button>
-</div>
+            <button
+              type="button"
+              className="btn btn-secondary min-w-[140px]"
+              onClick={() => router.push("/")}
+            >
+              홈으로
+            </button>
+          </div>
         </div>
       </div>
     </div>

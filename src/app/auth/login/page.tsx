@@ -1,82 +1,97 @@
 "use client";
 
-import { useState } from "react";
-import { apiFetch } from "@/lib/backend/client";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import AuthCard from "@/components/auth/AuthCard";
+import InlineBanner from "@/components/ui/InlineBanner";
+import { login } from "@/lib/backend/authApi";
+import { pickMsg } from "@/lib/backend/types";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState(""); // UI상 아이디 입력란
-  const [password, setPassword] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [pending, setPending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // ✅ 회원가입 등에서 넘어온 success 표시
+  // - success 값이 뭐든 "회원가입이 완료되었습니다. 로그인해주세요." 로 고정
+  // - 한번 표시 후 쿼리 제거 (새로고침/뒤로가기 반복 방지)
+  useEffect(() => {
+    const s = searchParams.get("success");
+    if (!s) return;
+
+    setSuccessMsg("회원가입이 완료되었습니다. 로그인해주세요.");
+    router.replace("/auth/login");
+  }, [searchParams, router]);
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
 
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg("이메일과 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    setPending(true);
     try {
-      // ✅ 백엔드 컨트롤러의 @RequestMapping("/api/v1/auth") 및 @PostMapping("/login") 확인
-      const res = await apiFetch("/api/v1/auth/login", {
-        method: "POST",
-        // ✅ AuthLoginRequest 레코드의 @NotBlank String email 필드명에 맞춤
-        body: JSON.stringify({
-          email: username,
-          password: password,
-        }),
-      });
-
-      if (res.resultCode && res.resultCode.startsWith("200")) {
-        // ✅ AuthLoginResponse의 nickname 필드 활용
-        alert(`${res.data.nickname}님 환영합니다!`);
-        router.push("/");
-      } else {
-        alert(res.msg || "로그인 실패");
-      }
-    } catch (error) {
-      console.error("로그인 중 오류 발생:", error);
-      alert("이메일 또는 비밀번호를 확인해주세요.");
+      await login(email.trim(), password);
+      router.push("/me");
+      router.refresh();
+    } catch (err: any) {
+      setErrorMsg(pickMsg(err, "로그인에 실패했습니다."));
+    } finally {
+      setPending(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 text-black">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-lg shadow-md w-96"
-      >
-        <h1 className="text-2xl font-bold mb-6 text-center">로그인</h1>
+    <AuthCard title="로그인" sub="이메일과 비밀번호로 로그인합니다.">
+      <form onSubmit={onSubmit} className="space-y-4">
+        {errorMsg && <InlineBanner kind="error" message={errorMsg} />}
+        {successMsg && <InlineBanner kind="success" message={successMsg} />}
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">이메일</label>
-            <input
-              type="email"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 border rounded outline-none focus:ring-1 focus:ring-black"
-              placeholder="example@email.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">비밀번호</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded outline-none focus:ring-1 focus:ring-black"
-              placeholder="********"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-black text-white py-2 rounded font-bold hover:bg-gray-800 transition"
-          >
-            로그인하기
-          </button>
+        <div>
+          <div className="mb-1 text-sm text-text-2">이메일</div>
+          <input
+            className="input"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="user1@test.com"
+            autoComplete="email"
+          />
         </div>
+
+        <div>
+          <div className="mb-1 text-sm text-text-2">비밀번호</div>
+          <input
+            className="input"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••"
+            autoComplete="current-password"
+          />
+        </div>
+
+        <button className="btn btn-primary w-full" disabled={pending}>
+          {pending ? "로그인 중..." : "로그인"}
+        </button>
+
+        <button
+          type="button"
+          className="btn btn-secondary w-full"
+          onClick={() => router.push("/auth/signup")}
+        >
+          회원가입으로
+        </button>
       </form>
-    </div>
+    </AuthCard>
   );
 }
