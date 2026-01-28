@@ -1,18 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/backend/client"; // 게시글용
-import { getSimilarGames } from "@/lib/backend/gameApi"; // 게임 데이터용 (유사 게임 로직 응용)
+import { apiFetch } from "@/lib/backend/client";
+import { getSimilarGames } from "@/lib/backend/gameApi";
 import SimilarGamesRail from "@/components/game/SimilarGamesRail";
 import { SimilarGameResponse } from "@/type/gameTypes";
+import TypingTitle from "@/components/main/TypingTitle"; // 타이핑 타이틀 추가
+import { useGameSearch } from "@/hooks/useGameSearch"; // 검색 훅 추가
 
 export default function HomePage() {
   const [latestPosts, setLatestPosts] = useState([]);
   const [popularPosts, setPopularPosts] = useState([]);
   const [trendingGames, setTrendingGames] = useState<SimilarGameResponse[]>([]);
 
+  // 검색 관련 상태 및 훅
+  const [keyword, setKeyword] = useState("");
+  const { search } = useGameSearch();
+
   useEffect(() => {
-    // 1. 게시글 데이터 로드 (PostController 활용)
+    // 1. 게시글 데이터 로드
     apiFetch("/api/v1/posts?size=6&sort=id,desc").then((res) =>
       setLatestPosts(res.data.content),
     );
@@ -20,36 +26,56 @@ export default function HomePage() {
       setPopularPosts(res.data.content),
     );
 
-    // 2. 트렌딩 게임 로드
-    // (임의의 기준 게임 ID를 넣거나, 백엔드에 '인기 게임 전용 API'를 만들어 getSimilarGames 구조로 받으면 됨)
+    // 2. 트렌딩 게임 로드 (기준 ID: 1942)
     getSimilarGames(1942)
       .then(setTrendingGames)
       .catch(() => {});
   }, []);
 
+  // 검색 제출 핸들러
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!search(keyword)) {
+      alert("검색어를 입력해주세요!");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans">
       {/* --- 상단: Hero 검색 섹션 --- */}
-      <section className="relative h-[500px] flex flex-col items-center justify-center overflow-hidden border-b border-zinc-800">
+      <section className="relative h-[550px] flex flex-col items-center justify-center overflow-hidden border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent" />
+
         <div className="relative z-10 w-full max-w-3xl px-6 text-center">
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tighter mb-8 bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+          {/* TypingTitle 통합: 기존 h1 대신 또는 위에 배치 */}
+          <div className="mb-6">
+            <TypingTitle />
+          </div>
+
+          {/* <h1 className="text-4xl sm:text-6xl font-black tracking-tighter mb-10 bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
             SEARCH & CONNECT
-          </h1>
-          <div className="relative group">
+          </h1> */}
+
+          {/* form 태그로 감싸서 엔터 키 작동 */}
+          <form onSubmit={handleSubmit} className="relative group">
             <input
               type="text"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
               placeholder="찾으시는 게임이나 게시글 키워드를 입력하세요..."
-              className="w-full p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-lg"
+              className="w-full p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-lg pr-20"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">
+            <button
+              type="submit"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-300 font-bold transition-colors cursor-pointer"
+            >
               ENTER
-            </div>
-          </div>
+            </button>
+          </form>
         </div>
       </section>
 
-      {/* --- 중앙: 인기 게임 레일 (SimilarGamesRail 컴포넌트 재사용) --- */}
+      {/* --- 중앙: 인기 게임 레일 --- */}
       <div className="max-w-7xl mx-auto py-12 px-6">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight">
@@ -90,7 +116,7 @@ export default function HomePage() {
                 </h4>
                 <div className="mt-4 flex items-center justify-between text-xs text-zinc-500 font-medium">
                   <span>{post.authorName}</span>
-                  <span>{post.createDate.substring(5, 10)}</span>
+                  <span>{post.createDate?.substring(5, 10)}</span>
                 </div>
               </div>
             ))}
