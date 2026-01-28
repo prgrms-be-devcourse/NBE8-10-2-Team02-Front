@@ -1,4 +1,3 @@
-// src/components/game/GameHero.tsx
 import { buildCoverUrl, GameDetailResponse } from "@/type/gameTypes";
 import Image from "next/image";
 
@@ -22,11 +21,11 @@ export default function GameHero({ detail }: { detail: GameDetailResponse }) {
       : null);
 
   return (
-    <section className="rounded-2xl border border-zinc-800/60 bg-zinc-950/40 backdrop-blur">
+    <section className="title-card">
       <div className="grid grid-cols-1 gap-5 p-4 sm:p-6 md:grid-cols-[220px_1fr] md:gap-7">
         {/* Cover */}
         <div className="relative">
-          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-zinc-800/60 bg-zinc-900">
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl border border-border bg-surface-2">
             {coverUrl ? (
               <Image
                 src={coverUrl}
@@ -37,7 +36,7 @@ export default function GameHero({ detail }: { detail: GameDetailResponse }) {
                 priority
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm text-zinc-400">
+              <div className="flex h-full w-full items-center justify-center text-sm text-text-3">
                 No Cover
               </div>
             )}
@@ -48,36 +47,30 @@ export default function GameHero({ detail }: { detail: GameDetailResponse }) {
         <div className="flex flex-col justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              <h1 className="text-2xl font-semibold tracking-tight leading-none text-text-1 sm:text-3xl">
                 {detail.gameName}
               </h1>
-              <span className="rounded-full border border-zinc-700/70 bg-zinc-900/60 px-2 py-0.5 text-xs text-zinc-200">
+              <span className="rounded-full border border-border bg-zinc-900/60 px-2 py-0.5 text-xs text-text-2">
                 {formatDate(detail.firstReleaseDate)}
               </span>
             </div>
 
-            <p className="mt-3 text-sm leading-6 text-zinc-200/90 sm:text-[15px]">
+            <p className="mt-3 text-sm leading-6 text-text-2 sm:text-[15px]">
               {detail.summary?.trim()
                 ? detail.summary
-                : "요약 정보가 아직 없어요. (IGDB 쪽 데이터가 비어있을 때 종종 그래요)"}
+                : "요약 정보가 아직 없슈.."}
             </p>
           </div>
 
           {/* quick chips */}
           <div className="flex flex-wrap gap-2">
             {(detail.genres ?? []).slice(0, 6).map((g) => (
-              <span
-                key={g}
-                className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200 ring-1 ring-inset ring-indigo-500/30"
-              >
+              <span key={g} className="span-genre">
                 {g}
               </span>
             ))}
             {(detail.platforms ?? []).slice(0, 4).map((p) => (
-              <span
-                key={p}
-                className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 ring-1 ring-inset ring-emerald-500/30"
-              >
+              <span key={p} className="span-platform">
                 {p}
               </span>
             ))}

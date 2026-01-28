@@ -1,5 +1,6 @@
 // src/lib/gameTypes.ts
 export type GameDetailResponse = {
+  gameId: number; // 내부 DB ID (리뷰 등 API 호출 시 사용)
   igdbId: number;
   gameName: string;
   summary: string;
@@ -10,6 +11,28 @@ export type GameDetailResponse = {
   publishers: string[];
   genres: string[];
   platforms: string[];
+};
+
+export type ReviewDto = {
+  id: number;
+  title: string;
+  createDate: string;
+  modifyDate: string;
+  authorId: number;
+  authorNickName: string;
+  gameId: number;
+  gameName: string;
+  content: string;
+  rating: number;
+};
+
+export type PageResponse<T> = {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number; // current page
+  size: number;
+  last: boolean;
 };
 
 export type GameVideoResponse = {
