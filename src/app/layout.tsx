@@ -1,6 +1,5 @@
 "use client";
 
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,16 +9,6 @@ import { useEffect, useState } from "react";
 import { getMe, type MeResponse } from "@/lib/backend/me";
 import { logout } from "@/lib/backend/authApi";
 import { pickMsg } from "@/lib/backend/types";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 type AuthState =
   | { status: "checking"; me: null }
@@ -91,7 +80,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#1a1c23] text-gray-200 flex flex-col min-h-screen`}
+        className="antialiased bg-[#1a1c23] text-gray-200 flex flex-col min-h-screen"
+        style={{ fontFamily: "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
       >
         {/* --- 헤더 --- */}
         <header className="bg-[#111217]/95 backdrop-blur-xl text-white py-4 px-10 flex justify-between items-center sticky top-0 z-50 border-b border-white/10 shadow-2xl">
