@@ -1,77 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiFetch } from "@/lib/backend/client";
+import Link from "next/link";
 
-// ✅ 1. 무지개 색상 배열 정의 (부드러운 파스텔톤 클래스)
 const rainbowColors = [
-  "bg-red-100 text-red-700",
-  "bg-orange-100 text-orange-700",
-  "bg-yellow-100 text-yellow-700",
-  "bg-green-100 text-green-700",
-  "bg-blue-100 text-blue-700",
-  "bg-indigo-100 text-indigo-700",
-  "bg-purple-100 text-purple-700",
+  "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  "bg-pink-500/10 text-pink-400 border border-pink-500/20",
+  "bg-green-500/10 text-green-400 border border-green-500/20",
+  "bg-orange-500/10 text-orange-400 border border-orange-500/20",
 ];
 
-interface PostListItem {
-  id: number;
-  title: string;
-  authorId: number;
-  authorName: string;
-  content: string;
-  createDate: string;
-  modifyDate: string;
-  tags: string[];
-  viewCount?: number;
-}
-
-interface PageResponse {
-  content: PostListItem[];
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  number: number;
-}
-
+// useSearchParams를 사용하는 컴포넌트는 Suspense로 감싸는 것이 Next.js 권장사항입니다.
 export default function PostListPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#1a1c23]" />}>
+      <PostListContent />
+    </Suspense>
+  );
+}
+
+function PostListContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [posts, setPosts] = useState<PostListItem[]>([]);
-  const [pageInfo, setPageInfo] = useState<PageResponse | null>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [pageInfo, setPageInfo] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 현재 상태 추출
-  const searchKeyword = searchParams.get("keyword") || "";
-  const searchTagName = searchParams.get("tagName") || "";
+  // URL에서 검색 조건 가져오기
+  const searchKeyword = searchParams.get("kw") || ""; // 백엔드와 맞춤 (kw)
+  const searchTagName = searchParams.get("tag") || ""; // 백엔드와 맞춤 (tag)
   const currentPage = parseInt(searchParams.get("page") || "0");
 
+  // 입력창 상태 (URL 검색 조건으로 초기화)
   const [titleInput, setTitleInput] = useState(searchKeyword);
   const [tagInput, setTagInput] = useState(searchTagName);
 
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      let url = "";
-      const commonParams = `page=${currentPage}&size=10`;
+      // ✅ 제목(kw)과 태그(tag)를 동시에 쿼리 파라미터로 보냄
+      const params = new URLSearchParams();
+      if (searchKeyword) params.append("kw", searchKeyword);
+      if (searchTagName) params.append("tag", searchTagName);
+      params.append("page", currentPage.toString());
+      params.append("size", "8");
 
-      if (searchTagName.trim()) {
-        url = `/api/v1/posts/tag?tagName=${encodeURIComponent(searchTagName)}&${commonParams}`;
-      } else if (searchKeyword.trim()) {
-        url = `/api/v1/posts/search?keyword=${encodeURIComponent(searchKeyword)}&${commonParams}`;
-      } else {
-        url = `/api/v1/posts?${commonParams}`;
-      }
+      const res = await apiFetch(`/api/v1/posts?${params.toString()}`);
 
-      const res = await apiFetch(url);
       if (res && res.data) {
         setPosts(res.data.content || []);
         setPageInfo(res.data);
       }
     } catch (error) {
-      console.error("게시글 로딩 실패:", error);
+      console.error("로딩 실패:", error);
     } finally {
       setLoading(false);
     }
@@ -81,179 +66,165 @@ export default function PostListPage() {
     fetchPosts();
   }, [searchParams]);
 
-  const handleTitleSearch = () => {
-    setTagInput("");
-    router.push(`/posts?page=0&keyword=${titleInput}`);
-  };
+  // ✅ 통합 검색 실행 (제목과 태그 입력을 모두 URL에 반영)
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (titleInput.trim()) params.set("kw", titleInput.trim());
+    if (tagInput.trim()) params.set("tag", tagInput.trim());
+    params.set("page", "0"); // 검색 시 페이지는 처음으로
 
-  const handleTagSearch = () => {
-    setTitleInput("");
-    router.push(`/posts?page=0&tagName=${tagInput}`);
-  };
-
-  const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
     router.push(`/posts?${params.toString()}`);
   };
 
-  // ✅ 게시글 삭제 핸들러
-  const handleDeletePost = async (e: React.MouseEvent, postId: number) => {
-    e.stopPropagation(); // 상세 페이지 이동 방지
-    if (!confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
-
-    try {
-      await apiFetch(`/api/v1/posts/${postId}`, { method: "DELETE" });
-      alert("삭제되었습니다.");
-      fetchPosts(); // 목록 새로고침
-    } catch (error) {
-      alert("삭제 실패");
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#444] pb-20 font-sans">
-      {/* 이미지 UI를 반영한 헤더 영역 */}
-      <div className="w-full bg-[#333] pt-10 pb-10 px-6 mb-4 shadow-xl">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {/* 1. 제목 검색창 */}
-          <div className="flex gap-2">
+    <div className="min-h-screen bg-[#1a1c23] text-gray-200 pb-20 font-sans selection:bg-blue-500/30 tracking-tight">
+      {/* 1. 상단 통합 검색 바 섹션 */}
+      <div className="w-full bg-[#111217]/80 backdrop-blur-md sticky top-0 z-40 py-8 px-6 border-b border-white/5 shadow-2xl mb-12">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-5 items-center">
+          <div className="relative flex-1 w-full group">
             <input
-              className="flex-1 p-3 bg-white outline-none text-black font-medium"
-              placeholder="게시글 제목을 입력하세요"
+              className="w-full p-4 pl-6 bg-[#252833] rounded-2xl outline-none text-white border border-gray-700 focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-gray-500"
+              placeholder="게시글 제목으로 찾기..."
               value={titleInput}
               onChange={(e) => setTitleInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleTitleSearch()}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-            <button
-              onClick={handleTitleSearch}
-              className="bg-[#222] text-white px-8 py-3 font-bold hover:bg-black transition uppercase border border-[#555]"
-            >
-              search
-            </button>
-            <button
-              onClick={() => router.push("/posts/write")}
-              className="bg-[#222] text-white px-8 py-3 font-bold hover:bg-black transition border border-[#555]"
-            >
-              글 작성
-            </button>
           </div>
-
-          {/* 2. 태그 검색창 */}
-          <div className="flex items-center gap-2">
-            <span className="bg-[#222] text-white px-6 py-2.5 font-bold border border-[#555]">
-              태그
-            </span>
+          {/* 태그 입력창 필드를 상단 바로 통합하면 더 좋습니다 */}
+          <div className="relative w-full md:w-48 group">
             <input
-              className="w-1/4 p-2.5 bg-white outline-none text-black text-sm"
-              placeholder="호러, 공략..."
+              className="w-full p-4 bg-[#252833] rounded-2xl outline-none text-blue-400 border border-gray-700 focus:border-blue-500 transition-all shadow-inner font-bold placeholder:text-gray-600 text-sm"
+              placeholder="# 태그 입력"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleTagSearch()}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
+          </div>
+          <div className="flex gap-3 w-full md:w-auto">
+            <button
+              onClick={handleSearch}
+              className="flex-1 md:flex-none bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-500 transition-all active:scale-95 shadow-lg"
+            >
+              검색
+            </button>
+            <Link
+              href="/posts/write"
+              className="flex-1 md:flex-none bg-white text-black px-10 py-4 rounded-2xl font-bold text-center hover:bg-gray-100 transition-all active:scale-95"
+            >
+              작성
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* 리스트 본문 영역 */}
-      <div className="max-w-4xl mx-auto px-6 bg-[#666] p-6 rounded-lg shadow-inner">
-        <div className="grid grid-cols-12 px-4 py-2 text-xs font-black text-gray-300 border-b border-gray-500 mb-4 uppercase tracking-widest">
-          <div className="col-span-6 text-center">제목</div>
-          <div className="col-span-2 text-center">작성자</div>
-          <div className="col-span-2 text-center">작성일</div>
-          <div className="col-span-2 text-center">조회수</div>
-        </div>
+      <div className="max-w-5xl mx-auto px-6">
+        {/* 현재 필터 상태 표시 */}
+        {(searchKeyword || searchTagName) && (
+          <div className="mb-8 flex items-center gap-3">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+              Active Filters:
+            </span>
+            {searchKeyword && (
+              <span className="bg-gray-800 text-gray-300 px-3 py-1 rounded-lg text-xs border border-gray-700">
+                제목: {searchKeyword}
+              </span>
+            )}
+            {searchTagName && (
+              <span className="bg-blue-900/30 text-blue-400 px-3 py-1 rounded-lg text-xs border border-blue-500/20">
+                #{searchTagName}
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setTitleInput("");
+                setTagInput("");
+                router.push("/posts");
+              }}
+              className="text-xs text-red-400 hover:underline ml-2"
+            >
+              초기화
+            </button>
+          </div>
+        )}
 
-        <div className="space-y-4">
+        {/* 3. 리스트 영역 */}
+        <div className="grid gap-5">
           {loading ? (
-            <div className="text-center py-20 text-white font-bold animate-pulse">
-              Loading...
+            <div className="text-center py-40 animate-pulse">
+              <p className="font-bold text-gray-500 text-sm italic uppercase tracking-widest">
+                Loading Post Feed...
+              </p>
             </div>
           ) : posts.length === 0 ? (
-            <div className="bg-white p-10 text-center rounded text-gray-400 font-bold">
-              검색 결과가 없습니다.
+            <div className="text-center py-32 bg-[#252833] rounded-[2rem] border border-dashed border-gray-700">
+              <p className="text-gray-500 font-medium">검색 결과가 없습니다.</p>
             </div>
           ) : (
             posts.map((post) => (
               <div
                 key={post.id}
                 onClick={() => router.push(`/posts/${post.id}`)}
-                className="group relative bg-white rounded shadow-md p-4 grid grid-cols-12 items-center cursor-pointer hover:bg-gray-100 transition duration-200"
+                className="group bg-[#252833] hover:bg-[#2d313e] transition-all duration-300 rounded-[1.5rem] p-7 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer border border-transparent hover:border-blue-500/30 shadow-sm"
               >
-                <div className="col-span-6 px-4">
-                  <div className="font-bold text-gray-800 text-base mb-2 flex items-center gap-2">
+                <div className="flex-1 space-y-4">
+                  <h3 className="text-xl md:text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">
                     {post.title}
-                    {/* 호버 시 나타나는 제어 버튼 */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/posts/${post.id}/modify`);
-                        }}
-                        className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-200"
-                      >
-                        수정
-                      </button>
-                      <button
-                        onClick={(e) => handleDeletePost(e, post.id)}
-                        className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-200"
-                      >
-                        삭제
-                      </button>
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-semibold text-gray-400 bg-black/30 px-3 py-1 rounded-full">
+                      {post.authorName}
+                    </span>
+                    <div className="flex gap-2">
+                      {post.tags?.map((tag: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className={`text-[11px] px-2.5 py-0.5 rounded-lg font-bold ${rainbowColors[idx % rainbowColors.length]}`}
+                        >
+                          #{tag}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {/* ✅ 무지개 색상 태그 적용 부분 */}
-                    {post.tags?.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className={`text-[10px] px-2 py-0.5 rounded font-black shadow-sm ${
-                          rainbowColors[idx % rainbowColors.length]
-                        }`}
-                      >
-                        #{tag}
-                      </span>
-                    ))}
+                </div>
+
+                <div className="mt-6 md:mt-0 flex md:flex-col items-end justify-between w-full md:w-auto min-w-[120px]">
+                  <div className="text-[11px] font-medium text-gray-500 bg-white/5 px-2 py-1 rounded-md mb-3">
+                    {post.createDate?.substring(0, 10)}
                   </div>
-                </div>
-                <div className="col-span-2 text-center text-sm text-gray-700 font-bold truncate px-2">
-                  {post.authorName}
-                </div>
-                <div className="col-span-2 text-center text-sm text-gray-500 font-medium">
-                  {post.createDate ? post.createDate.substring(0, 10) : "-"}
-                </div>
-                <div className="col-span-2 text-center font-black text-gray-800">
-                  {post.viewCount || 0}
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">
+                      Views
+                    </span>
+                    <span className="text-4xl font-black text-white group-hover:text-blue-500 transition-colors tracking-tighter">
+                      {post.viewCount || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))
           )}
         </div>
 
-        {/* 페이지네이션 */}
-        {pageInfo && pageInfo.totalPages > 0 && (
-          <div className="flex justify-center items-center gap-2 mt-10">
+        {/* 4. 페이지네이션 */}
+        {pageInfo && pageInfo.totalPages > 1 && (
+          <div className="flex justify-center items-center gap-3 mt-20">
             {Array.from({ length: pageInfo.totalPages }, (_, i) => (
               <button
                 key={i}
-                onClick={() => goToPage(i)}
-                className={`w-8 h-8 flex items-center justify-center text-sm transition-all ${
+                onClick={() => {
+                  const p = new URLSearchParams(searchParams.toString());
+                  p.set("page", i.toString());
+                  router.push(`/posts?${p.toString()}`);
+                }}
+                className={`w-11 h-11 rounded-xl font-bold transition-all ${
                   currentPage === i
-                    ? "bg-white text-black font-black scale-110 shadow-lg"
-                    : "text-white hover:text-gray-300 font-bold"
+                    ? "bg-blue-600 text-white"
+                    : "bg-[#252833] text-gray-500 hover:text-white"
                 }`}
               >
                 {i + 1}
               </button>
             ))}
-            {currentPage < pageInfo.totalPages - 1 && (
-              <button
-                onClick={() => goToPage(currentPage + 1)}
-                className="text-white ml-2 hover:translate-x-1 transition-transform font-black"
-              >
-                &gt;
-              </button>
-            )}
           </div>
         )}
       </div>

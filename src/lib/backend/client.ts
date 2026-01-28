@@ -1,23 +1,25 @@
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const apiFetch = (url: string, options?: RequestInit) => {
-  if (options?.body) {
-    const headers = new Headers(options?.headers || {});
+export const apiFetch = async <T = any>(url: string, options?: RequestInit): Promise<T> => {
+  const nextOptions: RequestInit = { ...(options || {}) };
 
+  if (nextOptions.body) {
+    const headers = new Headers(nextOptions.headers || {});
     if (!headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json; charset=utf-8");
     }
-
-    options.headers = headers;
+    nextOptions.headers = headers;
   }
 
-  return fetch(`${NEXT_PUBLIC_API_BASE_URL}${url}`, options).then((res) => {
-    if (!res.ok) {
-      return res.json().then((e) => {
-        throw e;
-      });
-    }
+  nextOptions.credentials = "include";
 
-    return res.json();
-  });
+  const res = await fetch(`${NEXT_PUBLIC_API_BASE_URL}${url}`, nextOptions);
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw json ?? { msg: `HTTP ${res.status}` };
+  }
+
+  return json as T;
 };
