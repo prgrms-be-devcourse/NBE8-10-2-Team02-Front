@@ -104,7 +104,7 @@ function PostListContent() {
               href="/posts/write"
               className="flex-1 md:flex-none bg-zinc-100 hover:bg-white text-black px-8 py-3 rounded-lg font-black text-xs text-center transition-all uppercase"
             >
-              WRITE
+              게시글 작성
             </Link>
           </div>
         </div>
