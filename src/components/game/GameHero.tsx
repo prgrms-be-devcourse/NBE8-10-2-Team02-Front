@@ -1,5 +1,6 @@
 import { buildCoverUrl, GameDetailResponse } from "@/type/gameTypes";
 import Image from "next/image";
+import AddToLibraryButton from "./AddToLibraryButton";
 
 function formatDate(localDate: string | null) {
   if (!localDate) return "TBD";
@@ -46,13 +47,16 @@ export default function GameHero({ detail }: { detail: GameDetailResponse }) {
         {/* Title + Summary */}
         <div className="flex flex-col justify-between gap-4">
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight leading-none text-text-1 sm:text-3xl">
-                {detail.gameName}
-              </h1>
-              <span className="rounded-full border border-border bg-zinc-900/60 px-2 py-0.5 text-xs text-text-2">
-                {formatDate(detail.firstReleaseDate)}
-              </span>
+            <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
+                <h1 className="text-2xl font-semibold tracking-tight leading-none text-text-1 sm:text-3xl">
+                  {detail.gameName}
+                </h1>
+                <span className="rounded-full border border-border bg-zinc-900/60 px-2 py-0.5 text-xs text-text-2">
+                  {formatDate(detail.firstReleaseDate)}
+                </span>
+              </div>
+              <AddToLibraryButton gameId={detail.gameId} />
             </div>
 
             <p className="mt-3 text-sm leading-6 text-text-2 sm:text-[15px]">
