@@ -56,7 +56,7 @@ export default function GameHero({ detail }: { detail: GameDetailResponse }) {
                   {formatDate(detail.firstReleaseDate)}
                 </span>
               </div>
-              <AddToLibraryButton gameId={detail.gameId} />
+              <AddToLibraryButton gameId={detail.gameId} platform={detail.platforms?.[0] ?? ""} />
             </div>
 
             <p className="mt-3 text-sm leading-6 text-text-2 sm:text-[15px]">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { getMe } from "@/lib/backend/me";
 import { addToLibrary } from "@/lib/backend/libraryApi";
 
-export default function AddToLibraryButton({ gameId }: { gameId: number }) {
+export default function AddToLibraryButton({ gameId, platform }: { gameId: number; platform: string }) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
 
@@ -16,7 +16,7 @@ export default function AddToLibraryButton({ gameId }: { gameId: number }) {
       const me = await getMe();
       await addToLibrary(me.data.id, {
         gameId,
-        platform: "",
+        platform,
         playtime: 0,
         isFavorite: false,
         status: "PLAN_TO_PLAY",
