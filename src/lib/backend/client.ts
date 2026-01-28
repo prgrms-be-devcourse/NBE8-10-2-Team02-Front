@@ -1,6 +1,13 @@
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export const apiFetch = async <T = any>(url: string, options?: RequestInit): Promise<T> => {
+export const apiFetch = async <T = any>(
+  url: string,
+  options?: RequestInit
+): Promise<T> => {
+  if (!NEXT_PUBLIC_API_BASE_URL) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+  }
+
   const nextOptions: RequestInit = { ...(options || {}) };
 
   if (nextOptions.body) {
@@ -18,7 +25,11 @@ export const apiFetch = async <T = any>(url: string, options?: RequestInit): Pro
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw { status: res.status, ...(json ?? {}), msg: json?.msg ?? `HTTP ${res.status}` };
+    throw {
+      status: res.status,
+      ...(json ?? {}),
+      msg: json?.msg ?? `HTTP ${res.status}`,
+    };
   }
 
   return json as T;

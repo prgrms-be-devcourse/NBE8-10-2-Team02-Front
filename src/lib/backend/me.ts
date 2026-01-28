@@ -24,3 +24,13 @@ export function changeNickname(nickname: string) {
     body: JSON.stringify({ nickname }),
   });
 }
+
+export async function getMeOrNull(): Promise<MeResponse | null> {
+  try {
+    const rs = await getMe();
+    return rs.data ?? null;
+  } catch (e: any) {
+    if (e?.status === 401) return null;
+    throw e;
+  }
+}

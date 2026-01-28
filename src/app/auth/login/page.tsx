@@ -18,9 +18,6 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // ✅ 회원가입 등에서 넘어온 success 표시
-  // - success 값이 뭐든 "회원가입이 완료되었습니다. 로그인해주세요." 로 고정
-  // - 한번 표시 후 쿼리 제거 (새로고침/뒤로가기 반복 방지)
   useEffect(() => {
     const s = searchParams.get("success");
     if (!s) return;
@@ -42,8 +39,12 @@ export default function LoginPage() {
     setPending(true);
     try {
       await login(email.trim(), password);
+
+      // ✅ 로그인 성공 직후 네브바(루트 레이아웃) 상태 갱신 트리거
+      window.dispatchEvent(new Event("auth:changed"));
+
       router.push("/");
-      router.refresh();
+      // router.refresh(); // 굳이 필요 없지만 원하면 유지
     } catch (err: any) {
       setErrorMsg(pickMsg(err, "로그인에 실패했습니다."));
     } finally {
