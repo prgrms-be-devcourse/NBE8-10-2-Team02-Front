@@ -37,32 +37,20 @@ export default function RootLayout({
   const [auth, setAuth] = useState<AuthState>({ status: "checking", me: null });
   const [logoutPending, setLogoutPending] = useState(false);
 
-<<<<<<< HEAD
-=======
   // ✅ 앱 시작 시 1번만 로그인 상태 확인 (페이지 이동마다 호출 X)
->>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
   useEffect(() => {
     let alive = true;
 
     (async () => {
       try {
-<<<<<<< HEAD
-        const me = await getMeOrNull();
-=======
         const me = await getMeOrNull(); // ✅ 401이면 null
->>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
         if (!alive) return;
 
         if (me) setAuth({ status: "authed", me });
         else setAuth({ status: "guest", me: null });
-<<<<<<< HEAD
-      } catch (err: any) {
-        console.error(pickMsg(err, "getMe 실패"));
-=======
       } catch (err) {
         // 401 이외 에러는 여기로 올 수 있음
         console.error(pickMsg(err, "me 조회 실패"));
->>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
         if (!alive) return;
         setAuth({ status: "guest", me: null });
       }
@@ -89,6 +77,7 @@ export default function RootLayout({
     }
   };
 
+  // 메뉴 버튼 스타일
   const getMenuButtonStyle = (path: string) => {
     const isActive = pathname.startsWith(path);
     return `
@@ -108,6 +97,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#1a1c23] text-gray-200 flex flex-col min-h-screen`}
       >
+        {/* --- 헤더 --- */}
         <header className="bg-[#111217]/95 backdrop-blur-xl text-white py-4 px-10 flex justify-between items-center sticky top-0 z-50 border-b border-white/10 shadow-2xl">
           <div className="flex items-center gap-12">
             <Link
@@ -127,6 +117,7 @@ export default function RootLayout({
               </span>
             </Link>
 
+            {/* 내비게이션 */}
             <nav className="hidden md:flex items-center gap-3">
               <Link href="/posts" className={getMenuButtonStyle("/posts")}>
                 게시판
@@ -153,6 +144,7 @@ export default function RootLayout({
             </nav>
           </div>
 
+          {/* ✅ 오른쪽: 로그인 상태 연동 */}
           <div className="flex items-center gap-3">
             {auth.status === "checking" ? null : !isAuthed ? (
               <>
@@ -170,19 +162,23 @@ export default function RootLayout({
                 </Link>
               </>
             ) : (
-              <button
-                onClick={onLogout}
-                disabled={logoutPending}
-                className="text-[13px] font-black uppercase tracking-widest bg-red-500/20 px-7 py-3 rounded-2xl hover:bg-red-500/25 transition-all active:scale-95 border border-red-500/30"
-              >
-                {logoutPending ? "..." : "Logout"}
-              </button>
+              <>
+                <button
+                  onClick={onLogout}
+                  disabled={logoutPending}
+                  className="text-[13px] font-black uppercase tracking-widest bg-red-500/20 px-7 py-3 rounded-2xl hover:bg-red-500/25 transition-all active:scale-95 border border-red-500/30"
+                >
+                  {logoutPending ? "..." : "Logout"}
+                </button>
+              </>
             )}
           </div>
         </header>
 
+        {/* 메인 콘텐츠 */}
         <main className="flex-grow bg-bg text-text-1">{children}</main>
 
+        {/* 푸터 */}
         <footer className="w-full py-14 bg-[#0d0e12] border-t border-white/5 text-gray-600 text-center">
           <div className="max-w-5xl mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">
