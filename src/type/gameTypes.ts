@@ -46,6 +46,14 @@ export type SimilarGameResponse = {
   coverImageId: string | null;
 };
 
+export type PopularGameCardDto = {
+  id: number;
+  name: string;
+  coverImageId: string | null;
+  genres: string[];
+  score: number;
+};
+
 export function buildCoverUrl(
   template: string | null,
   size: string,

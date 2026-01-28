@@ -2,16 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/backend/client";
-import { getSimilarGames } from "@/lib/backend/gameApi";
-import SimilarGamesRail from "@/components/game/SimilarGamesRail";
-import { SimilarGameResponse } from "@/type/gameTypes";
+import { getIgdbPopularGames } from "@/lib/backend/gameApi";
+import PopularGamesRail from "@/components/game/PopularGamesRail";
+import { PopularGameCardDto } from "@/type/gameTypes";
 import TypingTitle from "@/components/main/TypingTitle"; // 타이핑 타이틀 추가
 import { useGameSearch } from "@/hooks/useGameSearch"; // 검색 훅 추가
 
 export default function HomePage() {
   const [latestPosts, setLatestPosts] = useState([]);
   const [popularPosts, setPopularPosts] = useState([]);
-  const [trendingGames, setTrendingGames] = useState<SimilarGameResponse[]>([]);
+  const [igdbPopularGames, setIgdbPopularGames] = useState<
+    PopularGameCardDto[]
+  >([]);
 
   // 검색 관련 상태 및 훅
   const [keyword, setKeyword] = useState("");
@@ -26,9 +28,9 @@ export default function HomePage() {
       setPopularPosts(res.data.content),
     );
 
-    // 2. 트렌딩 게임 로드 (기준 ID: 1942)
-    getSimilarGames(1942)
-      .then(setTrendingGames)
+    // 2. IGDB 인기 게임 로드
+    getIgdbPopularGames(10)
+      .then(setIgdbPopularGames)
       .catch(() => {});
   }, []);
 
@@ -83,7 +85,7 @@ export default function HomePage() {
           </h2>
         </div>
         <div className="rounded-2xl border border-zinc-800/60 bg-zinc-950/40 backdrop-blur">
-          <SimilarGamesRail games={trendingGames} />
+          <PopularGamesRail games={igdbPopularGames} title="TOP 10" />
         </div>
       </div>
 
