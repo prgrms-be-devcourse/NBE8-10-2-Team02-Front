@@ -4,6 +4,13 @@ export const apiFetch = async <T = any>(
   url: string,
   options?: RequestInit
 ): Promise<T> => {
+<<<<<<< HEAD
+=======
+  if (!NEXT_PUBLIC_API_BASE_URL) {
+    throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+  }
+
+>>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
   const nextOptions: RequestInit = { ...(options || {}) };
 
   if (nextOptions.body) {
@@ -22,7 +29,10 @@ export const apiFetch = async <T = any>(
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
+<<<<<<< HEAD
     // 백엔드 RsData 형식이면 msg/resultCode가 들어있을 것
+=======
+>>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
     throw {
       status: res.status,
       ...(json ?? {}),

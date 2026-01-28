@@ -1,14 +1,25 @@
 "use client";
 
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getMeOrNull, type MeResponse } from "@/lib/backend/me";
 import { logout } from "@/lib/backend/authApi";
 import { pickMsg } from "@/lib/backend/types";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 type AuthState =
   | { status: "checking"; me: null }
@@ -26,18 +37,32 @@ export default function RootLayout({
   const [auth, setAuth] = useState<AuthState>({ status: "checking", me: null });
   const [logoutPending, setLogoutPending] = useState(false);
 
+<<<<<<< HEAD
+=======
+  // ✅ 앱 시작 시 1번만 로그인 상태 확인 (페이지 이동마다 호출 X)
+>>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
   useEffect(() => {
     let alive = true;
 
     (async () => {
       try {
+<<<<<<< HEAD
         const me = await getMeOrNull();
+=======
+        const me = await getMeOrNull(); // ✅ 401이면 null
+>>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
         if (!alive) return;
 
         if (me) setAuth({ status: "authed", me });
         else setAuth({ status: "guest", me: null });
+<<<<<<< HEAD
       } catch (err: any) {
         console.error(pickMsg(err, "getMe 실패"));
+=======
+      } catch (err) {
+        // 401 이외 에러는 여기로 올 수 있음
+        console.error(pickMsg(err, "me 조회 실패"));
+>>>>>>> 6433768 (refactor: #22 페이지 이동 시 me 호출 수정)
         if (!alive) return;
         setAuth({ status: "guest", me: null });
       }
@@ -76,11 +101,12 @@ export default function RootLayout({
     `;
   };
 
+  const isAuthed = auth.status === "authed";
+
   return (
     <html lang="ko">
       <body
-        className="antialiased bg-[#1a1c23] text-gray-200 flex flex-col min-h-screen"
-        style={{ fontFamily: "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#1a1c23] text-gray-200 flex flex-col min-h-screen`}
       >
         <header className="bg-[#111217]/95 backdrop-blur-xl text-white py-4 px-10 flex justify-between items-center sticky top-0 z-50 border-b border-white/10 shadow-2xl">
           <div className="flex items-center gap-12">
@@ -128,7 +154,7 @@ export default function RootLayout({
           </div>
 
           <div className="flex items-center gap-3">
-            {auth.status === "checking" ? null : auth.status === "guest" ? (
+            {auth.status === "checking" ? null : !isAuthed ? (
               <>
                 <Link
                   href="/auth/signup"
