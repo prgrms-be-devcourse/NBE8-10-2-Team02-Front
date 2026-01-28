@@ -42,7 +42,7 @@ export default function LoginPage() {
     setPending(true);
     try {
       await login(email.trim(), password);
-      router.push("/me");
+      router.push("/");
       router.refresh();
     } catch (err: any) {
       setErrorMsg(pickMsg(err, "로그인에 실패했습니다."));

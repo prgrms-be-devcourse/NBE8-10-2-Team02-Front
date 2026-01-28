@@ -4,7 +4,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { getMe, type MeResponse } from "@/lib/backend/me";
+import { logout } from "@/lib/backend/authApi";
+import { pickMsg } from "@/lib/backend/types";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,21 +21,69 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+type AuthState =
+  | { status: "checking"; me: null }
+  | { status: "guest"; me: null }
+  | { status: "authed"; me: MeResponse };
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
 
-  // 메뉴 버튼 스타일 (크기 + 피드백 강화)
+  const [auth, setAuth] = useState<AuthState>({ status: "checking", me: null });
+  const [logoutPending, setLogoutPending] = useState(false);
+
+  // ✅ 네브바 로그인 상태 확인
+  useEffect(() => {
+    let alive = true;
+
+    (async () => {
+      try {
+        const rs = await getMe();
+        if (!alive) return;
+        setAuth({ status: "authed", me: rs.data });
+      } catch {
+        if (!alive) return;
+        setAuth({ status: "guest", me: null });
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+    // pathname을 넣으면 페이지 이동마다 재확인(원하면 유지)
+  }, [pathname]);
+
+  const onLogout = async () => {
+    if (logoutPending) return;
+    setLogoutPending(true);
+
+    try {
+      await logout();
+    } catch (err: any) {
+      // 로그아웃 실패해도 UI는 일단 게스트로 돌리고 홈으로 보내는게 UX 좋음
+      console.error(pickMsg(err, "로그아웃 실패"));
+    } finally {
+      setAuth({ status: "guest", me: null });
+      setLogoutPending(false);
+      router.push("/");
+      router.refresh();
+    }
+  };
+
+  // 메뉴 버튼 스타일
   const getMenuButtonStyle = (path: string) => {
     const isActive = pathname.startsWith(path);
     return `
       group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider transition-all duration-200 active:scale-90
-      ${isActive
-        ? "text-blue-400 bg-blue-500/15 shadow-inner shadow-blue-500/10"
-        : "text-gray-400 hover:text-white hover:bg-white/10"
+      ${
+        isActive
+          ? "text-blue-400 bg-blue-500/15 shadow-inner shadow-blue-500/10"
+          : "text-gray-400 hover:text-white hover:bg-white/10"
       }
     `;
   };
@@ -43,7 +96,6 @@ export default function RootLayout({
         {/* --- 헤더 --- */}
         <header className="bg-[#111217]/95 backdrop-blur-xl text-white py-4 px-10 flex justify-between items-center sticky top-0 z-50 border-b border-white/10 shadow-2xl">
           <div className="flex items-center gap-12">
-            {/* 로고 영역: S 짤림 방지를 위해 pr-2 및 여백 재배치 */}
             <Link
               href="/"
               className="hover:scale-105 transition-transform active:scale-95 flex items-center gap-3 shrink-0"
@@ -66,33 +118,57 @@ export default function RootLayout({
               <Link href="/posts" className={getMenuButtonStyle("/posts")}>
                 게시판
                 <span
-                  className={`absolute bottom-2 left-1/2 -translate-x-1/2 h-1 bg-blue-500 rounded-full transition-all duration-300 ${pathname.startsWith("/posts") ? "w-6" : "w-0 group-hover:w-4"}`}
-                ></span>
+                  className={`absolute bottom-2 left-1/2 -translate-x-1/2 h-1 bg-blue-500 rounded-full transition-all duration-300 ${
+                    pathname.startsWith("/posts") ? "w-6" : "w-0 group-hover:w-4"
+                  }`}
+                />
               </Link>
 
               <button className="group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-90">
                 라이브러리
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-0 bg-gray-500 rounded-full transition-all duration-300 group-hover:w-4"></span>
+                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-0 bg-gray-500 rounded-full transition-all duration-300 group-hover:w-4" />
               </button>
 
-              <Link
-                href="/me"
-                className="group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-90"
-              >
+              {/* ✅ 내 페이지는 Link로 */}
+              <Link href="/me" className={getMenuButtonStyle("/me")}>
                 내 페이지
-                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-0 bg-gray-500 rounded-full transition-all duration-300 group-hover:w-4"></span>
+                <span
+                  className={`absolute bottom-2 left-1/2 -translate-x-1/2 h-1 bg-blue-500 rounded-full transition-all duration-300 ${
+                    pathname.startsWith("/me") ? "w-6" : "w-0 group-hover:w-4"
+                  }`}
+                />
               </Link>
             </nav>
           </div>
 
-          {/* 로그인 버튼 */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/auth/login"
-              className="text-[13px] font-black uppercase tracking-widest bg-blue-600 px-7 py-3 rounded-2xl hover:bg-blue-500 hover:shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all active:scale-95 shadow-lg shadow-blue-900/40"
-            >
-              Login
-            </Link>
+          {/* ✅ 오른쪽: 로그인 상태 연동 */}
+          <div className="flex items-center gap-3">
+            {auth.status === "checking" ? null : auth.status === "guest" ? (
+              <>
+                <Link
+                  href="/auth/signup"
+                  className="text-[13px] font-black uppercase tracking-widest bg-white/10 px-6 py-3 rounded-2xl hover:bg-white/15 transition-all active:scale-95 border border-white/10"
+                >
+                  Signup
+                </Link>
+                <Link
+                  href="/auth/login"
+                  className="text-[13px] font-black uppercase tracking-widest bg-blue-600 px-7 py-3 rounded-2xl hover:bg-blue-500 hover:shadow-[0_0_25px_rgba(37,99,235,0.4)] transition-all active:scale-95 shadow-lg shadow-blue-900/40"
+                >
+                  Login
+                </Link>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={onLogout}
+                  disabled={logoutPending}
+                  className="text-[13px] font-black uppercase tracking-widest bg-red-500/20 px-7 py-3 rounded-2xl hover:bg-red-500/25 transition-all active:scale-95 border border-red-500/30"
+                >
+                  {logoutPending ? "..." : "Logout"}
+                </button>
+              </>
+            )}
           </div>
         </header>
 

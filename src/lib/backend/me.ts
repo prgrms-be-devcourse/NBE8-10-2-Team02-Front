@@ -17,3 +17,10 @@ export function changePassword(oldPassword: string, newPassword: string) {
     body: JSON.stringify({ oldPassword, newPassword }),
   });
 }
+
+export function changeNickname(nickname: string) {
+  return apiFetch<RsData<null>>("/api/v1/members/me/nickname", {
+    method: "PUT",
+    body: JSON.stringify({ nickname }),
+  });
+}
