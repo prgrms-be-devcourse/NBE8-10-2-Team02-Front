@@ -11,7 +11,7 @@ export function getGameReviews(gameId: number, page = 0, size = 20) {
 /** 내 리뷰 조회 (게임별) - 없으면 404 throw */
 export function getMyReview(gameId: number) {
   return apiFetch<{ data: ReviewDto }>(
-    `/api/v1/reviews/game/my/${gameId}`,
+    `/api/v1/reviews/my/game/${gameId}`,
   ).then((r) => r.data);
 }
 
