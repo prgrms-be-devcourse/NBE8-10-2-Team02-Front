@@ -31,7 +31,7 @@ export default function PostModifyPage({
           setTags(data.tags || []);
         }
       } catch (error) {
-        alert("게시글을 불러올 수 없습니다.");
+        alert("데이터를 동기화할 수 없습니다.");
         router.back();
       } finally {
         setLoading(false);
@@ -70,12 +70,12 @@ export default function PostModifyPage({
       });
 
       if (res) {
-        alert("수정되었습니다.");
+        alert("수정 완료: 데이터가 성공적으로 갱신되었습니다.");
         router.push(`/posts/${id}`);
         router.refresh();
       }
     } catch (error) {
-      alert("수정에 실패했습니다.");
+      alert("데이터 갱신에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -83,64 +83,64 @@ export default function PostModifyPage({
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#1a1c23] flex items-center justify-center">
-        <div className="text-gray-500 font-bold animate-pulse tracking-widest uppercase">
-          Loading Post...
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="text-zinc-500 font-black animate-pulse text-sm tracking-[0.3em] uppercase">
+          Syncing Data...
         </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#1a1c23] text-gray-200 pb-20 font-sans">
-      {/* 1. 상단 헤더 영역 */}
-      <div className="w-full bg-[#111217] py-16 px-6 mb-10 shadow-2xl">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl font-black text-white tracking-tight uppercase">
-            Edit Post
+    <div className="min-h-screen bg-[#0a0a0c] text-zinc-300 pb-20 font-sans selection:bg-indigo-500/30">
+      {/* 1. 상단 헤더 영역 - 수정 모드 강조 */}
+      <div className="w-full bg-[#0d0e12] py-20 px-6 mb-12 border-b border-zinc-800/50">
+        <div className="max-w-4xl mx-auto">
+          <span className="text-[10px] font-black text-indigo-500 tracking-[0.5em] uppercase mb-4 block">
+            System Override
+          </span>
+          <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none">
+            Edit <span className="text-indigo-600">Archive</span>
           </h1>
-          <p className="text-gray-500 mt-3 font-medium">
-            기존의 내용을 더 멋지게 다듬어보세요.
+          <p className="text-zinc-500 mt-6 font-bold text-sm tracking-tight border-l-2 border-zinc-800 pl-4 uppercase">
+            기존 게시글을 수정합니다.
           </p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-[#252833] rounded-2xl shadow-xl p-8 md:p-12 border border-gray-800"
-        >
-          {/* 제목 입력 */}
-          <div className="mb-8">
-            <label className="block text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">
-              제목
+      <div className="max-w-4xl mx-auto px-6">
+        <form onSubmit={handleSubmit} className="space-y-12">
+          {/* 제목 입력 영역 */}
+          <div className="group">
+            <label className="block text-[10px] font-black text-zinc-500 mb-4 uppercase tracking-[0.2em] group-focus-within:text-indigo-500 transition-colors">
+              Post Subject / 제목
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full p-4 bg-[#1a1c23] border border-gray-700 rounded-xl focus:border-blue-500 outline-none text-white transition-all text-lg font-bold placeholder:text-gray-600"
+              className="w-full bg-zinc-900/40 border-b-2 border-zinc-800 p-0 pb-4 focus:border-indigo-500 outline-none text-white transition-all text-3xl md:text-4xl font-black placeholder:text-zinc-800"
               placeholder="제목을 입력하세요"
-              maxLength={20}
+              maxLength={40}
               required
             />
           </div>
 
           {/* 태그 영역 */}
-          <div className="mb-8">
-            <label className="block text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">
-              태그
+          <div>
+            <label className="block text-[10px] font-black text-zinc-500 mb-4 uppercase tracking-[0.2em]">
+              Tags / 태그 수정
             </label>
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mb-4">
               {tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-blue-600/20 text-blue-400 px-4 py-1.5 rounded-lg text-sm font-bold flex items-center border border-blue-500/30"
+                  className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-sm text-xs font-black flex items-center border border-indigo-500/30 shadow-[0_0_10px_rgba(79,70,229,0.1)]"
                 >
                   #{tag}
                   <button
                     type="button"
                     onClick={() => removeTag(index)}
-                    className="ml-2 hover:text-white transition-colors"
+                    className="ml-2 hover:text-white text-indigo-700 transition-colors"
                   >
                     ×
                   </button>
@@ -152,40 +152,44 @@ export default function PostModifyPage({
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={handleTagKeyDown}
-              className="w-full p-4 bg-[#1a1c23] border border-gray-700 rounded-xl focus:border-blue-500 outline-none text-white transition-all text-sm placeholder:text-gray-600"
-              placeholder="태그 입력 후 엔터나 쉼표를 누르세요"
+              className="w-full p-4 bg-zinc-900/50 border border-zinc-800 rounded-sm focus:border-indigo-500/50 outline-none text-white transition-all text-sm font-bold placeholder:text-zinc-700"
+              placeholder="태그 입력 (엔터 또는 쉼표)"
             />
           </div>
 
-          {/* 내용 입력 */}
-          <div className="mb-10">
-            <label className="block text-xs font-black text-gray-500 mb-3 uppercase tracking-widest">
-              내용
+          {/* 내용 입력 영역 */}
+          <div>
+            <label className="block text-[10px] font-black text-zinc-500 mb-4 uppercase tracking-[0.2em]">
+              Content / 데이터 본문
             </label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full p-5 bg-[#1a1c23] border border-gray-300/10 rounded-xl h-80 focus:border-blue-500 outline-none text-white resize-none transition-all leading-relaxed placeholder:text-gray-600"
-              placeholder="내용을 수정하세요..."
+              className="w-full p-6 bg-zinc-900/30 border border-zinc-800 rounded-sm h-[450px] focus:border-indigo-500/50 outline-none text-zinc-100 resize-none transition-all text-lg leading-relaxed placeholder:text-zinc-800"
+              placeholder="수정할 내용을 입력하십시오..."
               required
             />
           </div>
 
-          {/* 버튼 영역 */}
-          <div className="flex flex-col md:flex-row gap-4">
+          {/* 하단 컨트롤 영역 */}
+          <div className="flex items-center justify-between pt-10 border-t border-zinc-800">
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex-1 order-2 md:order-1 bg-transparent text-gray-400 py-4 font-bold rounded-xl hover:bg-gray-800 transition border border-gray-700"
+              className="text-xs font-black text-zinc-600 hover:text-white transition-colors tracking-widest uppercase"
             >
-              취소
+              Cancel / 돌아가기
             </button>
+
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 order-1 md:order-2 bg-blue-600 text-white py-4 font-black rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-900/20 disabled:bg-gray-700 uppercase tracking-widest"
+              className="group relative px-12 py-4 bg-white text-black font-black rounded-sm hover:bg-indigo-600 hover:text-white transition-all disabled:bg-zinc-800 disabled:text-zinc-500 overflow-hidden"
             >
-              {submitting ? "Updating..." : "작성 완료"}
+              <span className="relative z-10 tracking-[0.2em] uppercase text-sm">
+                {submitting ? "Updating..." : "Update Archive"}
+              </span>
+              <div className="absolute inset-0 bg-indigo-600 translate-y-[101%] group-hover:translate-y-0 transition-transform duration-300" />
             </button>
           </div>
         </form>
