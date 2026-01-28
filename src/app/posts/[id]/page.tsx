@@ -4,7 +4,14 @@ import { useEffect, useState, use } from "react";
 import { apiFetch } from "@/lib/backend/client";
 import { useRouter } from "next/navigation";
 
-// ✅ 1. 댓글 아이템 컴포넌트
+// RGB 네온 스타일 정의
+const rgbNeonColors = [
+  "bg-red-500/5 text-[#ff4d4d] border-red-500/40 shadow-[0_0_10px_rgba(239,68,68,0.15)]",
+  "bg-emerald-500/5 text-[#2efc71] border-emerald-500/40 shadow-[0_0_10px_rgba(46,252,113,0.15)]",
+  "bg-blue-500/5 text-[#00d4ff] border-blue-500/40 shadow-[0_0_10px_rgba(0,212,255,0.15)]",
+  "bg-fuchsia-500/5 text-[#ff00ff] border-fuchsia-500/40 shadow-[0_0_10px_rgba(255,0,255,0.15)]",
+];
+
 const CommentItem = ({
   comment,
   isChild = false,
@@ -23,35 +30,35 @@ const CommentItem = ({
     <div
       className={`${
         isChild
-          ? "bg-[#1a1c23] border-l-2 border-blue-500 ml-6"
-          : "bg-[#252833]"
-      } p-5 rounded-xl transition-all mb-3 border border-gray-800`}
+          ? "bg-[#0d0e12] border-l-2 border-indigo-500 ml-8"
+          : "bg-[#111114]"
+      } p-6 rounded-sm mb-4 border border-zinc-800 group transition-all`}
     >
-      <div className="flex justify-between mb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex justify-between mb-4">
+        <div className="flex items-center gap-3">
           <span
-            className={`font-black ${isChild ? "text-blue-400 text-sm" : "text-white"}`}
+            className={`font-bold tracking-tight ${isChild ? "text-indigo-400 text-xs" : "text-zinc-50"}`}
           >
             {comment.authorName}
           </span>
-          <span className="text-[10px] text-gray-500">
+          <span className="text-[10px] font-medium text-zinc-500 tracking-wider">
             {comment.createDate?.substring(0, 16).replace("T", " ")}
           </span>
         </div>
         {!comment.deleted && (
-          <div className="flex gap-3 text-[11px] font-bold">
+          <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => {
                 setEditingCommentId(comment.id);
                 setEditContent(comment.content);
               }}
-              className="text-gray-400 hover:text-blue-400"
+              className="text-[11px] font-bold text-zinc-400 hover:text-indigo-400"
             >
               수정
             </button>
             <button
               onClick={() => handleDeleteComment(comment.id)}
-              className="text-gray-400 hover:text-red-400"
+              className="text-[11px] font-bold text-zinc-400 hover:text-red-500"
             >
               삭제
             </button>
@@ -60,45 +67,45 @@ const CommentItem = ({
       </div>
 
       {isEditing ? (
-        <div className="mt-2">
+        <div className="space-y-3">
           <textarea
             autoFocus
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
-            className="w-full p-4 bg-[#1a1c23] border border-blue-500 rounded-lg text-sm text-white outline-none h-24 resize-none"
+            className="w-full p-4 bg-zinc-900 border border-indigo-500/50 rounded-sm text-sm text-white outline-none h-24 resize-none font-medium leading-relaxed"
           />
-          <div className="flex justify-end gap-2 mt-2">
-            <button
-              onClick={() => handleUpdateComment(comment.id)}
-              className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg font-bold"
-            >
-              저장
-            </button>
+          <div className="flex justify-end gap-2">
             <button
               onClick={() => setEditingCommentId(null)}
-              className="text-xs bg-gray-700 text-white px-4 py-2 rounded-lg font-bold"
+              className="text-xs font-bold bg-zinc-800 text-zinc-400 px-4 py-2 rounded-sm"
             >
               취소
+            </button>
+            <button
+              onClick={() => handleUpdateComment(comment.id)}
+              className="text-xs font-bold bg-indigo-600 text-white px-4 py-2 rounded-sm shadow-lg"
+            >
+              저장하기
             </button>
           </div>
         </div>
       ) : (
         <p
-          className={`text-sm leading-relaxed ${comment.deleted ? "text-gray-600 italic" : "text-gray-300"}`}
+          className={`text-[15px] leading-relaxed font-normal ${comment.deleted ? "text-zinc-700 italic" : "text-zinc-200"}`}
         >
           {comment.content}
         </p>
       )}
 
       {!isChild && !comment.deleted && (
-        <div className="flex justify-end mt-3">
+        <div className="flex justify-end mt-4">
           <button
             onClick={() =>
               setReplyingTo(replyingTo === comment.id ? null : comment.id)
             }
-            className="text-[10px] text-gray-500 hover:text-blue-400 font-black uppercase tracking-widest"
+            className="text-[11px] font-bold text-zinc-500 hover:text-indigo-400 tracking-tight transition-colors"
           >
-            {replyingTo === comment.id ? "[ 답글 닫기 ]" : "[ 답글 작성 ]"}
+            {replyingTo === comment.id ? "닫기 ▲" : "답글 쓰기 ▼"}
           </button>
         </div>
       )}
@@ -106,7 +113,6 @@ const CommentItem = ({
   );
 };
 
-// ✅ 2. 메인 상세 페이지 컴포넌트
 export default function PostDetailPage({
   params,
 }: {
@@ -119,7 +125,6 @@ export default function PostDetailPage({
   const [post, setPost] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [commentInput, setCommentInput] = useState("");
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replyInput, setReplyInput] = useState("");
@@ -139,15 +144,14 @@ export default function PostDetailPage({
         setLoading(true);
         const postRes = await apiFetch(`/api/v1/posts/${id}`);
         const postData = postRes?.data || postRes;
-        if (postData && postData.id) {
-          setPost(postData);
-        } else {
+        if (postData && postData.id) setPost(postData);
+        else {
           router.push("/posts");
           return;
         }
         await fetchComments();
       } catch (error) {
-        console.error("로딩 실패:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -160,18 +164,16 @@ export default function PostDetailPage({
       const res = await apiFetch(`/api/v1/posts/${id}/like`, {
         method: "POST",
       });
-      if (res.resultCode.startsWith("200")) {
+      if (res.resultCode.startsWith("200"))
         setPost({ ...post, likeCount: res.data });
-      } else {
-        alert(res.msg || "로그인이 필요합니다.");
-      }
+      else alert(res.msg);
     } catch (e) {
-      alert("오류가 발생했습니다.");
+      alert("추천 처리 중 오류가 발생했습니다.");
     }
   };
 
   const handleDeletePost = async () => {
-    if (!confirm("게시글을 삭제하시겠습니까?")) return;
+    if (!confirm("이 게시글을 삭제하시겠습니까?")) return;
     await apiFetch(`/api/v1/posts/${id}`, { method: "DELETE" });
     router.push("/posts");
   };
@@ -207,105 +209,147 @@ export default function PostDetailPage({
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#1a1c23] flex items-center justify-center">
-        <div className="text-gray-500 font-bold animate-pulse tracking-widest">
-          LOADING CONTENT...
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="text-zinc-600 font-bold animate-pulse tracking-widest text-sm">
+          데이터를 불러오는 중...
         </div>
       </div>
     );
   if (!post) return null;
 
   return (
-    <div className="min-h-screen bg-[#1a1c23] text-gray-200 pb-20 font-sans">
-      <div className="max-w-4xl mx-auto pt-20 px-6">
+    <div className="min-h-screen bg-[#0a0a0c] text-zinc-300 pb-40 font-sans antialiased selection:bg-indigo-500/40">
+      <div className="max-w-5xl mx-auto pt-24 px-6">
         {/* --- 헤더 --- */}
-        <div className="flex justify-between items-end mb-8 pb-8 border-b border-gray-800">
-          <div className="space-y-4 flex-1">
-            <div className="flex gap-2">
-              {post.tags?.map((tag: string, i: number) => (
-                <span
-                  key={i}
-                  className="text-[10px] bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded font-bold"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-            <h1 className="text-4xl font-black text-white leading-tight tracking-tight">
+        <div className="relative mb-16 pb-12 border-b border-zinc-800">
+          <div className="absolute -top-10 left-0 text-[10px] font-bold text-zinc-500 tracking-widest uppercase">
+            Post Archive // No.{post.id}
+          </div>
+
+          <div className="flex flex-wrap gap-2 mb-6">
+            {post.tags?.map((tag: string, i: number) => (
+              <span
+                key={i}
+                className={`text-[10px] px-3 py-1 rounded-sm border font-bold tracking-tight ${rgbNeonColors[i % rgbNeonColors.length]}`}
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-white leading-tight tracking-tight flex-1">
               {post.title}
             </h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500 font-medium">
-              <span className="text-gray-300">By {post.authorName}</span>
-              <span>•</span>
-              <span>{post.createDate?.replace("T", " ").substring(0, 16)}</span>
-              <span>•</span>
-              <span>조회 {post.viewCount || 0}</span>
-            </div>
-          </div>
-          <div className="flex gap-3 mb-1">
-            <button
-              onClick={() => router.push(`/posts/${id}/modify`)}
-              className="text-xs font-bold text-gray-500 hover:text-white transition"
-            >
-              수정
-            </button>
-            <button
-              onClick={handleDeletePost}
-              className="text-xs font-bold text-gray-500 hover:text-red-500 transition"
-            >
-              삭제
-            </button>
-          </div>
-        </div>
-
-        {/* --- 본문 --- */}
-        <div className="text-lg leading-relaxed min-h-[400px] whitespace-pre-wrap mb-20 text-gray-300">
-          {post.content}
-        </div>
-
-        {/* --- 좋아요 버튼 --- */}
-        <div className="flex flex-col items-center justify-center py-10 mb-20 bg-[#252833] rounded-3xl border border-gray-800 shadow-xl">
-          <button
-            onClick={handleLike}
-            className="group flex items-center justify-center w-20 h-20 bg-red-500/10 border-2 border-red-500/20 rounded-full hover:bg-red-500/20 hover:border-red-500 transition-all active:scale-90 mb-4"
-          >
-            <span className="text-3xl group-hover:scale-125 transition-transform">
-              ❤️
-            </span>
-          </button>
-          <span className="font-black text-2xl text-white tracking-tighter">
-            {post.likeCount || 0}{" "}
-            <span className="text-gray-500 text-sm font-normal ml-1">
-              좋아요
-            </span>
-          </span>
-        </div>
-
-        {/* --- 댓글 섹션 --- */}
-        <div className="pt-10 border-t border-gray-800">
-          <h3 className="text-xl font-black mb-8 uppercase tracking-widest text-white">
-            댓글 목록{" "}
-            <span className="text-blue-500 ml-2">{comments.length}</span>
-          </h3>
-
-          <div className="bg-[#252833] p-6 rounded-2xl mb-12 border border-gray-800 shadow-lg">
-            <textarea
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              className="w-full p-5 bg-[#1a1c23] border border-gray-700 rounded-xl h-28 resize-none text-white outline-none focus:border-blue-500 transition-all placeholder:text-gray-600"
-              placeholder="게이머와 소통해보세요..."
-            />
-            <div className="flex justify-end mt-4">
+            <div className="flex gap-3">
               <button
-                onClick={() => handleCommentSubmit(null)}
-                className="bg-blue-600 text-white px-10 py-3 rounded-xl font-black hover:bg-blue-700 transition uppercase text-sm tracking-widest shadow-lg shadow-blue-900/20"
+                onClick={() => router.push(`/posts/${id}/modify`)}
+                className="text-xs font-bold text-zinc-400 hover:text-white transition border border-zinc-800 px-4 py-2 rounded-sm hover:border-zinc-600"
               >
-                댓글 작성
+                수정
+              </button>
+              <button
+                onClick={handleDeletePost}
+                className="text-xs font-bold text-zinc-400 hover:text-red-500 transition border border-zinc-800 px-4 py-2 rounded-sm hover:border-red-900/50"
+              >
+                삭제
               </button>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="mt-8 flex items-center gap-6 text-[12px] font-bold text-zinc-500 tracking-tight">
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-600">작성자</span>
+              <span className="text-zinc-200">{post.authorName}</span>
+            </div>
+            <div className="w-1 h-1 bg-zinc-800 rounded-full" />
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-600">날짜</span>
+              <span className="text-zinc-400 font-medium">
+                {post.createDate?.replace("T", " ").substring(0, 16)}
+              </span>
+            </div>
+            <div className="w-1 h-1 bg-zinc-800 rounded-full" />
+            <div className="flex items-center gap-2">
+              <span className="text-zinc-600">조회수</span>
+              <span className="text-indigo-400">{post.viewCount || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* --- 본문 --- */}
+        <div className="text-[17px] leading-[1.8] min-h-[300px] whitespace-pre-wrap mb-24 text-zinc-100 font-normal max-w-4xl tracking-normal">
+          {post.content}
+        </div>
+
+        {/* --- 추천 UI --- */}
+        <div className="flex flex-col items-center py-12 mb-20 border-y border-zinc-800/50 bg-[#0d0e12]/50 relative">
+          <button
+            onClick={handleLike}
+            className="group relative flex flex-col items-center gap-4 active:scale-95 transition-all duration-75"
+          >
+            <div className="text-[11px] font-bold text-zinc-500 tracking-widest group-hover:text-indigo-400 transition-colors">
+              게시글 추천하기
+            </div>
+
+            <div className="relative flex items-center justify-center">
+              <div className="relative z-10 flex items-center gap-6 px-4">
+                <div className="w-8 h-[1px] bg-zinc-800 group-hover:bg-indigo-500/50" />
+                <div className="bg-black border border-zinc-800 px-8 py-4 rounded-sm shadow-xl group-hover:border-indigo-500/50 transition-all">
+                  <span className="text-4xl md:text-5xl font-black text-white tracking-tighter tabular-nums">
+                    {post.likeCount || 0}
+                  </span>
+                </div>
+                <div className="w-8 h-[1px] bg-zinc-800 group-hover:bg-indigo-500/50" />
+              </div>
+            </div>
+
+            <div className="relative overflow-hidden bg-zinc-900 border border-zinc-800 group-hover:border-indigo-600 px-10 py-3 rounded-sm transition-all duration-300">
+              <div className="relative z-10 flex items-center gap-2">
+                <span className="font-bold text-sm tracking-tight text-zinc-400 group-hover:text-white transition-colors">
+                  좋아요
+                </span>
+                <svg
+                  className="w-4 h-4 text-indigo-500 group-hover:text-white transition-colors"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* --- 댓글 섹션 --- */}
+        <div className="pt-20 border-t border-zinc-800">
+          <h3 className="text-sm font-bold mb-10 tracking-widest text-zinc-500 flex items-center gap-4">
+            <span>COMMENTS</span>
+            <span className="text-indigo-500 text-xl font-black">
+              {String(comments.length).padStart(2, "0")}
+            </span>
+            <div className="flex-1 h-[1px] bg-zinc-900" />
+          </h3>
+
+          <div className="bg-[#111114] p-8 rounded-sm mb-16 border border-zinc-800 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600" />
+            <textarea
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              className="w-full p-6 bg-zinc-900/50 border border-zinc-800 rounded-sm h-32 resize-none text-zinc-100 outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 font-medium text-[15px] leading-relaxed"
+              placeholder="댓글을 입력해 주세요..."
+            />
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => handleCommentSubmit(null)}
+                className="bg-white text-black px-12 py-4 rounded-sm font-bold hover:bg-indigo-500 hover:text-white transition text-xs tracking-widest active:scale-95 shadow-md"
+              >
+                댓글 등록
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-6">
             {comments
               .filter((c: any) => !c.parentId)
               .map((comment: any) => (
@@ -322,28 +366,26 @@ export default function PostDetailPage({
                     setReplyingTo={setReplyingTo}
                   />
 
-                  {/* 답글 입력창 */}
                   {replyingTo === comment.id && (
-                    <div className="mt-2 ml-10 p-5 bg-[#252833] rounded-xl border border-blue-500/30 mb-4">
+                    <div className="mt-2 ml-12 p-8 bg-[#0d0e12] rounded-sm border border-indigo-500/30 mb-6 shadow-2xl animate-in slide-in-from-top-2 duration-200">
                       <textarea
                         autoFocus
                         value={replyInput}
                         onChange={(e) => setReplyInput(e.target.value)}
-                        className="w-full p-4 bg-[#1a1c23] border border-gray-700 rounded-lg h-24 resize-none text-white outline-none focus:border-blue-500 transition-all text-sm"
+                        className="w-full p-4 bg-zinc-950 border border-zinc-800 rounded-sm h-28 resize-none text-zinc-200 outline-none focus:border-indigo-500/50 transition-all text-[14px] font-medium leading-relaxed"
                         placeholder="답글 내용을 입력하세요..."
                       />
-                      <div className="flex justify-end mt-3">
+                      <div className="flex justify-end mt-4">
                         <button
                           onClick={() => handleCommentSubmit(comment.id)}
-                          className="bg-blue-600 text-white px-6 py-2 rounded-lg text-xs font-black hover:bg-blue-700 transition uppercase tracking-widest"
+                          className="bg-indigo-600 text-white px-8 py-3 rounded-sm text-xs font-bold hover:bg-indigo-500 transition shadow-lg"
                         >
-                          Submit Reply
+                          답글 등록
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* 대댓글 리스트 */}
                   {comment.children?.map((child: any) => (
                     <CommentItem
                       key={child.id}
