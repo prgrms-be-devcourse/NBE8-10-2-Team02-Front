@@ -22,6 +22,9 @@ export default function SearchHeaderBar({
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        if (!search(keyword)) {
+          alert("검색어를 입력해주세요!");
+        }
         search(keyword);
       }}
       className="relative flex items-center"
