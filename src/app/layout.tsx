@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { getMe, type MeResponse } from "@/lib/backend/me";
+import { getMeOrNull, type MeResponse } from "@/lib/backend/me";
 import { logout } from "@/lib/backend/authApi";
 import { pickMsg } from "@/lib/backend/types";
 
@@ -26,16 +26,18 @@ export default function RootLayout({
   const [auth, setAuth] = useState<AuthState>({ status: "checking", me: null });
   const [logoutPending, setLogoutPending] = useState(false);
 
-  // ✅ 네브바 로그인 상태 확인
   useEffect(() => {
     let alive = true;
 
     (async () => {
       try {
-        const rs = await getMe();
+        const me = await getMeOrNull();
         if (!alive) return;
-        setAuth({ status: "authed", me: rs.data });
-      } catch {
+
+        if (me) setAuth({ status: "authed", me });
+        else setAuth({ status: "guest", me: null });
+      } catch (err: any) {
+        console.error(pickMsg(err, "getMe 실패"));
         if (!alive) return;
         setAuth({ status: "guest", me: null });
       }
@@ -44,8 +46,7 @@ export default function RootLayout({
     return () => {
       alive = false;
     };
-    // pathname을 넣으면 페이지 이동마다 재확인(원하면 유지)
-  }, [pathname]);
+  }, []);
 
   const onLogout = async () => {
     if (logoutPending) return;
@@ -54,7 +55,6 @@ export default function RootLayout({
     try {
       await logout();
     } catch (err: any) {
-      // 로그아웃 실패해도 UI는 일단 게스트로 돌리고 홈으로 보내는게 UX 좋음
       console.error(pickMsg(err, "로그아웃 실패"));
     } finally {
       setAuth({ status: "guest", me: null });
@@ -64,7 +64,6 @@ export default function RootLayout({
     }
   };
 
-  // 메뉴 버튼 스타일
   const getMenuButtonStyle = (path: string) => {
     const isActive = pathname.startsWith(path);
     return `
@@ -83,7 +82,6 @@ export default function RootLayout({
         className="antialiased bg-[#1a1c23] text-gray-200 flex flex-col min-h-screen"
         style={{ fontFamily: "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
       >
-        {/* --- 헤더 --- */}
         <header className="bg-[#111217]/95 backdrop-blur-xl text-white py-4 px-10 flex justify-between items-center sticky top-0 z-50 border-b border-white/10 shadow-2xl">
           <div className="flex items-center gap-12">
             <Link
@@ -103,7 +101,6 @@ export default function RootLayout({
               </span>
             </Link>
 
-            {/* 내비게이션 */}
             <nav className="hidden md:flex items-center gap-3">
               <Link href="/posts" className={getMenuButtonStyle("/posts")}>
                 게시판
@@ -119,7 +116,6 @@ export default function RootLayout({
                 <span className="absolute bottom-2 left-1/2 -translate-x-1/2 h-1 w-0 bg-gray-500 rounded-full transition-all duration-300 group-hover:w-4" />
               </button>
 
-              {/* ✅ 내 페이지는 Link로 */}
               <Link href="/me" className={getMenuButtonStyle("/me")}>
                 내 페이지
                 <span
@@ -131,7 +127,6 @@ export default function RootLayout({
             </nav>
           </div>
 
-          {/* ✅ 오른쪽: 로그인 상태 연동 */}
           <div className="flex items-center gap-3">
             {auth.status === "checking" ? null : auth.status === "guest" ? (
               <>
@@ -149,23 +144,19 @@ export default function RootLayout({
                 </Link>
               </>
             ) : (
-              <>
-                <button
-                  onClick={onLogout}
-                  disabled={logoutPending}
-                  className="text-[13px] font-black uppercase tracking-widest bg-red-500/20 px-7 py-3 rounded-2xl hover:bg-red-500/25 transition-all active:scale-95 border border-red-500/30"
-                >
-                  {logoutPending ? "..." : "Logout"}
-                </button>
-              </>
+              <button
+                onClick={onLogout}
+                disabled={logoutPending}
+                className="text-[13px] font-black uppercase tracking-widest bg-red-500/20 px-7 py-3 rounded-2xl hover:bg-red-500/25 transition-all active:scale-95 border border-red-500/30"
+              >
+                {logoutPending ? "..." : "Logout"}
+              </button>
             )}
           </div>
         </header>
 
-        {/* 메인 콘텐츠 */}
         <main className="flex-grow bg-bg text-text-1">{children}</main>
 
-        {/* 푸터 */}
         <footer className="w-full py-14 bg-[#0d0e12] border-t border-white/5 text-gray-600 text-center">
           <div className="max-w-5xl mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8">

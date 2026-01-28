@@ -11,6 +11,16 @@ export function getMe() {
   return apiFetch<RsData<MeResponse>>("/api/v1/members/me");
 }
 
+export async function getMeOrNull(): Promise<MeResponse | null> {
+  try {
+    const rs = await getMe();
+    return rs.data;
+  } catch (e: any) {
+    if (e?.status === 401) return null;
+    throw e; 
+  }
+}
+
 export function changePassword(oldPassword: string, newPassword: string) {
   return apiFetch<RsData<null>>("/api/v1/members/me/password", {
     method: "PUT",
