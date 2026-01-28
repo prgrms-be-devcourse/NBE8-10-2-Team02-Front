@@ -18,7 +18,7 @@ export const apiFetch = async <T = any>(url: string, options?: RequestInit): Pro
   const json = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw json ?? { msg: `HTTP ${res.status}` };
+    throw { status: res.status, ...(json ?? {}), msg: json?.msg ?? `HTTP ${res.status}` };
   }
 
   return json as T;

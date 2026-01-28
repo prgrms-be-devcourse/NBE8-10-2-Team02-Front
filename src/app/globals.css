@@ -54,6 +54,9 @@ body {
 }
 
 @layer components {
+  .title-card {
+    @apply border border-zinc-800/60 bg-zinc-950/40 backdrop-blur rounded-[var(--radius-md)];
+  }
   .card {
     @apply bg-surface-1 border border-border rounded-[var(--radius-md)];
   }
@@ -83,6 +86,13 @@ body {
     @apply w-full bg-surface-1 border border-border rounded-[var(--radius-sm)]
            px-3 py-2 text-text-1 placeholder:text-text-3
            focus:outline-none focus:shadow-[var(--shadow-focus)];
+  }
+
+  .span-genre {
+    @apply rounded-full bg-indigo-500/10 px-3 py-1 text-xs text-indigo-200 ring-1 ring-inset ring-indigo-500/30;
+  }
+  .span-platform {
+    @apply rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-200 ring-1 ring-inset ring-emerald-500/30;
   }
 }
 
