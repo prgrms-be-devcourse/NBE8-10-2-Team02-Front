@@ -114,9 +114,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 게시판
               </Link>
 
-              <button className="group relative px-6 py-3 rounded-2xl font-black text-[16px] uppercase tracking-wider text-gray-400 hover:text-white hover:bg-white/10 transition-all active:scale-90">
+              <Link href="/library" className={getMenuButtonStyle("/library")}>
                 라이브러리
-              </button>
+              </Link>
 
               <Link href="/me" className={getMenuButtonStyle("/me")}>
                 내 페이지
