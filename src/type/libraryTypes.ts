@@ -74,13 +74,31 @@ export const STATUS_CONFIG: Record<StatusEnum, { label: string; color: string; b
   },
 };
 
-export const PLATFORM_OPTIONS = [
-  "PC",
-  "PlayStation 5",
-  "PlayStation 4",
-  "Xbox Series X|S",
-  "Xbox One",
-  "Nintendo Switch",
-  "Mobile",
-  "Other",
+// Platform options matching backend PlatformGroup keys
+export const PLATFORM_OPTIONS: { value: string; label: string }[] = [
+  { value: "PC", label: "PC" },
+  { value: "PS", label: "PlayStation" },
+  { value: "XBOX", label: "Xbox" },
+  { value: "NINTENDO", label: "Nintendo" },
+  { value: "MOBILE", label: "Mobile" },
+  { value: "VR", label: "VR" },
 ];
+
+/**
+ * Map a platform name (e.g., "PlayStation 5", "PC (Microsoft Windows)")
+ * to a platform group name (e.g., "PS", "PC")
+ */
+export function getPlatformGroupName(platformName: string): string {
+  if (!platformName) return "PC";
+
+  const lower = platformName.toLowerCase();
+
+  if (lower.includes("playstation") || lower.includes("ps")) return "PS";
+  if (lower.includes("xbox")) return "XBOX";
+  if (lower.includes("nintendo") || lower.includes("switch") || lower.includes("wii")) return "NINTENDO";
+  if (lower.includes("pc") || lower.includes("windows") || lower.includes("mac") || lower.includes("linux")) return "PC";
+  if (lower.includes("mobile") || lower.includes("ios") || lower.includes("android")) return "MOBILE";
+  if (lower.includes("vr") || lower.includes("quest") || lower.includes("psvr")) return "VR";
+
+  return "PC"; // Default fallback
+}

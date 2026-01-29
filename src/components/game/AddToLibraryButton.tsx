@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { getMe } from "@/lib/backend/me";
 import { addToLibrary } from "@/lib/backend/libraryApi";
+import { getPlatformGroupName } from "@/type/libraryTypes";
 
 export default function AddToLibraryButton({ gameId, platform }: { gameId: number; platform: string }) {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -14,9 +15,11 @@ export default function AddToLibraryButton({ gameId, platform }: { gameId: numbe
 
     try {
       const me = await getMe();
+      // Convert platform name (e.g., "PlayStation 5") to group name (e.g., "PS")
+      const platformGroup = getPlatformGroupName(platform);
       await addToLibrary(me.data.id, {
         gameId,
-        platform,
+        platform: platformGroup,
         playtime: 0,
         isFavorite: false,
         status: "PLAN_TO_PLAY",
