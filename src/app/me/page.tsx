@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import InlineBanner from "@/components/ui/InlineBanner";
+import { apiFetch } from "@/lib/backend/client";
 import {
   getMe,
   changePassword,
@@ -12,7 +14,8 @@ import {
 import { logout } from "@/lib/backend/authApi";
 import { pickMsg } from "@/lib/backend/types";
 
-type Tab = "profile" | "account";
+// 탭 타입에 "posts" 추가
+type Tab = "profile" | "posts" | "account";
 
 export default function MePage() {
   const router = useRouter();
@@ -20,6 +23,10 @@ export default function MePage() {
   const [tab, setTab] = useState<Tab>("profile");
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // 게시글 상태 추가
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [postLoading, setPostLoading] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -37,29 +44,47 @@ export default function MePage() {
     const rs = await getMe();
     setMe(rs.data);
     setNicknameDraft(rs.data.nickname ?? "");
+    return rs.data;
+  };
+
+  // 내 게시글 불러오기 함수
+  const fetchMyPosts = async (currentMe: any) => {
+    setPostLoading(true);
+    try {
+      // 백엔드 Repository가 아직 닉네임 검색을 지원하지 않으므로 전체를 가져와 필터링
+      const res = await apiFetch("/api/v1/posts?size=100");
+      const allPosts = res.data?.content || res.data || [];
+      const filtered = allPosts.filter(
+        (p: any) => p.authorName === currentMe.nickname,
+      );
+      setMyPosts(filtered);
+    } catch (err) {
+      console.error("게시글 로드 실패", err);
+    } finally {
+      setPostLoading(false);
+    }
   };
 
   useEffect(() => {
     (async () => {
       setErrorMsg(null);
       try {
-        await reloadMe();
+        const currentMe = await reloadMe();
+        // 초기 로드 시 게시글도 미리 받아둠
+        await fetchMyPosts(currentMe);
       } catch {
         router.push("/auth/login");
       } finally {
         setLoading(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const onLogout = async () => {
     setErrorMsg(null);
     setSuccessMsg(null);
-
     try {
       const rs = await logout();
-      // 홈에서 메시지를 보여주고 싶으면 success를 넘기는 방식
       const msg = encodeURIComponent(rs.msg || "로그아웃 되었습니다.");
       router.push(`/?success=${msg}`);
       router.refresh();
@@ -72,12 +97,10 @@ export default function MePage() {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
-
     if (!oldPw.trim() || !newPw.trim()) {
       setErrorMsg("기존 비밀번호와 새 비밀번호를 입력해주세요.");
       return;
     }
-
     setPwPending(true);
     try {
       const rs = await changePassword(oldPw, newPw);
@@ -96,25 +119,15 @@ export default function MePage() {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
-
     const nextNick = nicknameDraft.trim();
     if (!nextNick) {
       setErrorMsg("새 닉네임을 입력해주세요.");
       return;
     }
-
-    // 프론트 즉시 피드백(선택): 너무 빡세게 하드코딩 싫으면 이 부분 지워도 됨
-    if (nextNick.length < 2 || nextNick.length > 30) {
-      setErrorMsg("닉네임은 2~30자여야 합니다.");
-      return;
-    }
-
-    // 같은 닉네임이면 굳이 요청 안 보내기(UX)
     if (me?.nickname === nextNick) {
       setErrorMsg("현재 닉네임과 동일합니다.");
       return;
     }
-
     setNickPending(true);
     try {
       const rs = await changeNickname(nextNick);
@@ -145,7 +158,7 @@ export default function MePage() {
           {/* 상단 제목 */}
           <div>
             <div className="text-lg font-semibold">마이페이지</div>
-            <div className="mt-1 text-sm text-text-3">내 정보 및 계정 설정</div>
+            <div className="mt-1 text-sm text-text-3">내 정보 및 활동 내역</div>
           </div>
 
           {/* 배너 */}
@@ -154,108 +167,144 @@ export default function MePage() {
             {successMsg && <InlineBanner kind="success" message={successMsg} />}
           </div>
 
-          {/* 탭 */}
+          {/* 탭 메뉴 */}
           <div className="mt-6 flex gap-2 border-b border-border pb-3">
             <button
               className={`btn ${tab === "profile" ? "btn-primary" : "btn-ghost"}`}
               onClick={() => setTab("profile")}
-              type="button"
             >
               내 정보
             </button>
             <button
+              className={`btn ${tab === "posts" ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setTab("posts")}
+            >
+              작성 게시글
+            </button>
+            <button
               className={`btn ${tab === "account" ? "btn-primary" : "btn-ghost"}`}
               onClick={() => setTab("account")}
-              type="button"
             >
               계정 설정
             </button>
           </div>
 
-          {/* 컨텐츠 */}
-          {tab === "profile" ? (
-            <div className="mt-6 space-y-3">
-              <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
-                <div className="text-xs text-text-3">이메일</div>
-                <div className="mt-1 text-sm font-medium text-text-1 break-all">
-                  {me.email}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
-                <div className="text-xs text-text-3">닉네임</div>
-                <div className="mt-1 text-sm font-medium text-text-1">
-                  {me.nickname}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-6 space-y-6">
-              {/* 닉네임 변경 섹션 */}
-              <div className="rounded-xl border border-border bg-surface-2 p-4">
-                <div className="text-sm font-semibold text-text-1">닉네임 변경</div>
-                <div className="mt-1 text-xs text-text-3">
-                  2~30자, 중복 불가
-                </div>
-
-                <form onSubmit={onChangeNickname} className="mt-3 space-y-3">
-                  <input
-                    className="input"
-                    value={nicknameDraft}
-                    onChange={(e) => setNicknameDraft(e.target.value)}
-                    placeholder="새 닉네임"
-                  />
-                  {/* ✅ 원하는 스타일: 입력창 밑 문구(스크린샷 느낌) */}
-                  <div className="text-xs text-text-3">
-                    현재 닉네임: <span className="text-text-2">{me.nickname}</span>
+          {/* 컨텐츠 영역 */}
+          <div className="mt-6">
+            {tab === "profile" && (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+                  <div className="text-xs text-text-3">이메일</div>
+                  <div className="mt-1 text-sm font-medium text-text-1 break-all">
+                    {me.email}
                   </div>
-
-                  <button className="btn btn-primary w-full" disabled={nickPending}>
-                    {nickPending ? "변경 중..." : "닉네임 변경"}
-                  </button>
-                </form>
+                </div>
+                <div className="rounded-xl border border-border bg-surface-2 px-4 py-3">
+                  <div className="text-xs text-text-3">닉네임</div>
+                  <div className="mt-1 text-sm font-medium text-text-1">
+                    {me.nickname}
+                  </div>
+                </div>
               </div>
+            )}
 
-              {/* 비밀번호 변경 섹션 */}
-              <div className="rounded-xl border border-border bg-surface-2 p-4">
-                <div className="text-sm font-semibold text-text-1">비밀번호 변경</div>
-                <div className="mt-1 text-xs text-text-3">
-                  기존 비밀번호 확인 후 변경합니다.
+            {tab === "posts" && (
+              <div className="space-y-3">
+                {postLoading ? (
+                  <div className="text-center py-10 text-sm text-text-3">
+                    불러오는 중...
+                  </div>
+                ) : myPosts.length > 0 ? (
+                  myPosts.map((post) => (
+                    <Link
+                      href={`/posts/${post.id}`}
+                      key={post.id}
+                      className="block rounded-xl border border-border bg-surface-2 px-4 py-4 hover:border-primary/50 transition-colors group"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-text-1 group-hover:text-primary transition-colors">
+                          {post.title}
+                        </span>
+                        <span className="text-[10px] text-text-3">
+                          {post.createDate?.substring(0, 10)}
+                        </span>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="text-center py-10 text-sm text-text-3 italic">
+                    작성한 게시글이 없습니다.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "account" && (
+              <div className="space-y-6">
+                <div className="rounded-xl border border-border bg-surface-2 p-4">
+                  <div className="text-sm font-semibold text-text-1">
+                    닉네임 변경
+                  </div>
+                  <form onSubmit={onChangeNickname} className="mt-3 space-y-3">
+                    <input
+                      className="input"
+                      value={nicknameDraft}
+                      onChange={(e) => setNicknameDraft(e.target.value)}
+                      placeholder="새 닉네임"
+                    />
+                    <div className="text-xs text-text-3">
+                      현재 닉네임:{" "}
+                      <span className="text-text-2">{me.nickname}</span>
+                    </div>
+                    <button
+                      className="btn btn-primary w-full"
+                      disabled={nickPending}
+                    >
+                      {nickPending ? "변경 중..." : "닉네임 변경"}
+                    </button>
+                  </form>
                 </div>
 
-                <form onSubmit={onChangePassword} className="mt-3 space-y-3">
-                  <input
-                    className="input"
-                    type="password"
-                    value={oldPw}
-                    onChange={(e) => setOldPw(e.target.value)}
-                    placeholder="기존 비밀번호"
-                  />
-                  <input
-                    className="input"
-                    type="password"
-                    value={newPw}
-                    onChange={(e) => setNewPw(e.target.value)}
-                    placeholder="새 비밀번호"
-                  />
-                  <button className="btn btn-primary w-full" disabled={pwPending}>
-                    {pwPending ? "변경 중..." : "비밀번호 변경"}
-                  </button>
-                </form>
+                <div className="rounded-xl border border-border bg-surface-2 p-4">
+                  <div className="text-sm font-semibold text-text-1">
+                    비밀번호 변경
+                  </div>
+                  <form onSubmit={onChangePassword} className="mt-3 space-y-3">
+                    <input
+                      className="input"
+                      type="password"
+                      value={oldPw}
+                      onChange={(e) => setOldPw(e.target.value)}
+                      placeholder="기존 비밀번호"
+                    />
+                    <input
+                      className="input"
+                      type="password"
+                      value={newPw}
+                      onChange={(e) => setNewPw(e.target.value)}
+                      placeholder="새 비밀번호"
+                    />
+                    <button
+                      className="btn btn-primary w-full"
+                      disabled={pwPending}
+                    >
+                      {pwPending ? "변경 중..." : "비밀번호 변경"}
+                    </button>
+                  </form>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* 하단 버튼 */}
           <div className="mt-10 flex justify-center gap-3">
             <button
               type="button"
               onClick={onLogout}
-              className="btn min-w-[140px] bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/25 active:bg-red-500/35"
+              className="btn min-w-[140px] bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/25"
             >
               로그아웃
             </button>
-
             <button
               type="button"
               className="btn btn-secondary min-w-[140px]"
