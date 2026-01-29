@@ -1,14 +1,14 @@
 "use client";
 
-import { buildIgdbImageUrl, SimilarGameResponse } from "@/type/gameTypes";
+import { buildIgdbImageUrl, PopularGameCardDto } from "@/type/gameTypes";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function SimilarGamesRail({
+export default function PopularGamesRail({
   games,
-  title = "Similar Games",
+  title = "TOP 10",
 }: {
-  games: SimilarGameResponse[];
+  games: PopularGameCardDto[];
   title?: string;
 }) {
   const list = (games ?? []).filter(Boolean);
@@ -30,8 +30,8 @@ export default function SimilarGamesRail({
 
               return (
                 <Link
-                  key={g.igdbId}
-                  href={`/games/${g.igdbId}`}
+                  key={g.id}
+                  href={`/games/${g.id}`}
                   className="group w-[140px] shrink-0 snap-start"
                 >
                   <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-md)] border border-border bg-surface-2">
@@ -45,8 +45,15 @@ export default function SimilarGamesRail({
                     />
                   </div>
 
-                  <div className="mt-2 line-clamp-2 text-xs text-text-2 group-hover:text-text-1">
-                    {g.name}
+                  <div className="mt-2">
+                    <div className="truncate text-sm font-medium text-text-2 group-hover:text-text-1">
+                      {g.name}
+                    </div>
+                    {g.genres?.[0] && (
+                      <div className="mt-0.5 text-xs text-text-3">
+                        {g.genres[0]}
+                      </div>
+                    )}
                   </div>
                 </Link>
               );
@@ -55,7 +62,7 @@ export default function SimilarGamesRail({
         </div>
       ) : (
         <div className="mt-4 rounded-[var(--radius-md)] border border-border bg-surface-2 p-6 text-sm text-text-2">
-          비슷한 게임 데이터가 없어요.
+          인기 게임 데이터가 없어요.
         </div>
       )}
     </section>

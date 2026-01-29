@@ -3,6 +3,7 @@ import {
   GameDetailResponse,
   GameVideoResponse,
   SimilarGameResponse,
+  PopularGameCardDto,
 } from "@/type/gameTypes";
 
 const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
@@ -24,5 +25,11 @@ export function getGameVideo(igdbId: number) {
 export function getSimilarGames(igdbId: number) {
   return fetchJson<SimilarGameResponse[]>(
     `${BASE}/api/v1/games/${igdbId}/similarGames`,
+  );
+}
+
+export function getIgdbPopularGames(limit = 10) {
+  return fetchJson<PopularGameCardDto[]>(
+    `${BASE}/api/v1/games/popular/igdb?limit=${limit}`,
   );
 }
