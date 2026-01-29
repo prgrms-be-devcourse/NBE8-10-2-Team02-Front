@@ -12,7 +12,7 @@ import ReviewCard from "./ReviewCard";
 
 type LoadState = "loading" | "no-review" | "has-review" | "auth-error";
 
-export default function GameMyReview({ gameId }: { gameId: number }) {
+export default function GameMyReview({ gameId, onReviewChange }: { gameId: number; onReviewChange?: () => void }) {
   const [myReview, setMyReview] = useState<ReviewDto | null>(null);
   const [state, setState] = useState<LoadState>("loading");
   const [isWriting, setIsWriting] = useState(false);
@@ -53,6 +53,7 @@ export default function GameMyReview({ gameId }: { gameId: number }) {
       setState("has-review");
       setIsWriting(false);
       resetForm();
+      onReviewChange?.();
     } catch (e: any) {
       alert(e?.msg || e?.message || "리뷰 작성에 실패했습니다.");
     } finally {
@@ -67,6 +68,7 @@ export default function GameMyReview({ gameId }: { gameId: number }) {
       const updated = await modifyReview(myReview.id, { title, content, rating });
       setMyReview(updated);
       setIsEditing(false);
+      onReviewChange?.();
     } catch (e: any) {
       alert(e?.msg || e?.message || "수정에 실패했습니다.");
     } finally {
@@ -80,6 +82,7 @@ export default function GameMyReview({ gameId }: { gameId: number }) {
       await deleteReview(myReview.id);
       setMyReview(null);
       setState("no-review");
+      onReviewChange?.();
     } catch (e: any) {
       alert(e?.msg || e?.message || "삭제에 실패했습니다.");
     }
