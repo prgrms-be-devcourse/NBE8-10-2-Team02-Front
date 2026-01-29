@@ -5,7 +5,7 @@ import { ReviewDto } from "@/type/gameTypes";
 import { getGameReviews } from "@/lib/backend/reviewApi";
 import ReviewCard from "./ReviewCard";
 
-export default function GameReviewList({ gameId }: { gameId: number }) {
+export default function GameReviewList({ gameId, refreshKey = 0 }: { gameId: number; refreshKey?: number }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [triggered, setTriggered] = useState(false);
   const [reviews, setReviews] = useState<ReviewDto[]>([]);
@@ -30,6 +30,16 @@ export default function GameReviewList({ gameId }: { gameId: number }) {
     },
     [gameId, loading],
   );
+
+  // refreshKey 변경 시 리스트 새로고침
+  useEffect(() => {
+    if (refreshKey > 0 && triggered) {
+      setReviews([]);
+      setPage(0);
+      setHasMore(true);
+      fetchReviews(0);
+    }
+  }, [refreshKey]);
 
   // Intersection Observer: 섹션이 뷰포트에 보이면 첫 로딩
   useEffect(() => {

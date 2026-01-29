@@ -8,8 +8,7 @@ import GameHero from "@/components/game/GameHero";
 import GameTrailer from "@/components/game/GameTrailer";
 import GameMeta from "@/components/game/GameMeta";
 import SimilarGamesRail from "@/components/game/SimilarGamesRail";
-import GameMyReview from "@/components/game/GameMyReview";
-import GameReviewList from "@/components/game/GameReviewList";
+import GameReviewSection from "@/components/game/GameReviewSection";
 
 export default async function GameDetailPage({
   params,
@@ -40,11 +39,9 @@ export default async function GameDetailPage({
           </div>
         </div>
 
-        <GameMyReview gameId={detail.gameId} />
-
-        <SimilarGamesRail games={similar} />
-
-        <GameReviewList gameId={detail.gameId} />
+        <GameReviewSection gameId={detail.gameId}>
+          <SimilarGamesRail games={similar} />
+        </GameReviewSection>
       </div>
     </div>
   );
