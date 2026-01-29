@@ -264,8 +264,8 @@ function LibraryContent() {
               >
                 <option value="">모든 플랫폼</option>
                 {PLATFORM_OPTIONS.map((platform) => (
-                  <option key={platform} value={platform}>
-                    {platform}
+                  <option key={platform.value} value={platform.value}>
+                    {platform.label}
                   </option>
                 ))}
               </select>
@@ -368,8 +368,8 @@ function LibraryContent() {
                   className="w-full bg-[#252833] text-gray-200 px-4 py-3 rounded-xl border border-gray-700 focus:border-blue-500 outline-none transition-all"
                 >
                   {PLATFORM_OPTIONS.map((platform) => (
-                    <option key={platform} value={platform}>
-                      {platform}
+                    <option key={platform.value} value={platform.value}>
+                      {platform.label}
                     </option>
                   ))}
                 </select>
