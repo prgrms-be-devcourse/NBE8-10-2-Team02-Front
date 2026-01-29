@@ -1,79 +1,61 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/backend/client";
-import { getIgdbPopularGames } from "@/lib/backend/gameApi";
-import PopularGamesRail from "@/components/game/PopularGamesRail";
-import { PopularGameCardDto } from "@/type/gameTypes";
-import TypingTitle from "@/components/main/TypingTitle"; // 타이핑 타이틀 추가
-import { useGameSearch } from "@/hooks/useGameSearch"; // 검색 훅 추가
+import Link from "next/link"; // 페이지 이동을 위한 Link 컴포넌트 추가
+import { apiFetch } from "@/lib/backend/client"; // 게시글용
+import { getSimilarGames } from "@/lib/backend/gameApi"; // 게임 데이터용
+import SimilarGamesRail from "@/components/game/SimilarGamesRail";
+import { SimilarGameResponse } from "@/type/gameTypes";
+
+// 게시글 데이터의 타입을 정의 (필요에 따라 수정하세요)
+interface Post {
+  id: number;
+  title: string;
+  authorName: string;
+  createDate: string;
+  viewCount: number;
+  tags?: string[];
+}
 
 export default function HomePage() {
-  const [latestPosts, setLatestPosts] = useState([]);
-  const [popularPosts, setPopularPosts] = useState([]);
-  const [igdbPopularGames, setIgdbPopularGames] = useState<
-    PopularGameCardDto[]
-  >([]);
-
-  // 검색 관련 상태 및 훅
-  const [keyword, setKeyword] = useState("");
-  const { search } = useGameSearch();
+  const [latestPosts, setLatestPosts] = useState<Post[]>([]);
+  const [popularPosts, setPopularPosts] = useState<Post[]>([]);
+  const [trendingGames, setTrendingGames] = useState<SimilarGameResponse[]>([]);
 
   useEffect(() => {
-    // 1. 게시글 데이터 로드
+    // 1. 게시글 데이터 로드 (PostController 활용)
     apiFetch("/api/v1/posts?size=6&sort=id,desc").then((res) =>
-      setLatestPosts(res.data.content),
+      setLatestPosts(res.data.content || []),
     );
     apiFetch("/api/v1/posts?size=6&sort=viewCount,desc").then((res) =>
-      setPopularPosts(res.data.content),
+      setPopularPosts(res.data.content || []),
     );
 
-    // 2. IGDB 인기 게임 로드
-    getIgdbPopularGames(10)
-      .then(setIgdbPopularGames)
+    // 2. 트렌딩 게임 로드
+    getSimilarGames(1942)
+      .then(setTrendingGames)
       .catch(() => {});
   }, []);
-
-  // 검색 제출 핸들러
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!search(keyword)) {
-      alert("검색어를 입력해주세요!");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-black text-zinc-100 font-sans">
       {/* --- 상단: Hero 검색 섹션 --- */}
-      <section className="relative h-[550px] flex flex-col items-center justify-center overflow-hidden border-b border-zinc-800">
+      <section className="relative h-[500px] flex flex-col items-center justify-center overflow-hidden border-b border-zinc-800">
         <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/10 to-transparent" />
-
         <div className="relative z-10 w-full max-w-3xl px-6 text-center">
-          {/* TypingTitle 통합: 기존 h1 대신 또는 위에 배치 */}
-          <div className="mb-6">
-            <TypingTitle />
-          </div>
-
-          {/* <h1 className="text-4xl sm:text-6xl font-black tracking-tighter mb-10 bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-6xl font-black tracking-tighter mb-8 bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
             SEARCH & CONNECT
-          </h1> */}
-
-          {/* form 태그로 감싸서 엔터 키 작동 */}
-          <form onSubmit={handleSubmit} className="relative group">
+          </h1>
+          <div className="relative group">
             <input
               type="text"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
               placeholder="찾으시는 게임이나 게시글 키워드를 입력하세요..."
-              className="w-full p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-lg pr-20"
+              className="w-full p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-lg"
             />
-            <button
-              type="submit"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-indigo-400 hover:text-indigo-300 font-bold transition-colors cursor-pointer"
-            >
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">
               ENTER
-            </button>
-          </form>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -85,26 +67,27 @@ export default function HomePage() {
           </h2>
         </div>
         <div className="rounded-2xl border border-zinc-800/60 bg-zinc-950/40 backdrop-blur">
-          <PopularGamesRail games={igdbPopularGames} title="TOP 10" />
+          <SimilarGamesRail games={trendingGames} />
         </div>
       </div>
 
       {/* --- 하단: 커뮤니티 피드 --- */}
       <div className="max-w-7xl mx-auto py-12 px-6 grid lg:grid-cols-[1fr_350px] gap-12">
-        {/* 최신글 피드 */}
+        {/* 최신 업데이트 소식 (최신글) */}
         <section>
           <h3 className="text-xl font-bold mb-8 flex items-center gap-3">
             <span className="h-6 w-1 bg-indigo-500 rounded-full" />
             최신 업데이트 소식
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            {latestPosts.map((post: any) => (
-              <div
+            {latestPosts.map((post) => (
+              <Link
+                href={`/posts/${post.id}`} // 클릭 시 이동할 경로
                 key={post.id}
-                className="group p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/50 transition-all cursor-pointer"
+                className="group p-5 rounded-2xl border border-zinc-800 bg-zinc-900/30 hover:bg-zinc-800/50 transition-all cursor-pointer block"
               >
                 <div className="flex gap-2 mb-3">
-                  {post.tags?.slice(0, 2).map((t: string) => (
+                  {post.tags?.slice(0, 2).map((t) => (
                     <span
                       key={t}
                       className="text-[10px] uppercase font-bold text-indigo-400 bg-indigo-400/10 px-2 py-0.5 rounded"
@@ -118,24 +101,25 @@ export default function HomePage() {
                 </h4>
                 <div className="mt-4 flex items-center justify-between text-xs text-zinc-500 font-medium">
                   <span>{post.authorName}</span>
-                  <span>{post.createDate?.substring(5, 10)}</span>
+                  <span>{post.createDate.substring(5, 10)}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
 
-        {/* 사이드바: 인기글 순위 */}
+        {/* 주간 인기글 (사이드바) */}
         <aside>
           <h3 className="text-xl font-bold mb-8 flex items-center gap-3">
             <span className="h-6 w-1 bg-emerald-500 rounded-full" />
             주간 인기글
           </h3>
           <div className="space-y-4">
-            {popularPosts.map((post: any, i: number) => (
-              <div
+            {popularPosts.map((post, i) => (
+              <Link
+                href={`/posts/${post.id}`} // 클릭 시 이동할 경로
                 key={post.id}
-                className="flex gap-4 items-start p-2 group cursor-pointer"
+                className="flex gap-4 items-start p-2 group cursor-pointer block"
               >
                 <span className="text-2xl font-black text-zinc-800 group-hover:text-indigo-500/50 transition-colors">
                   0{i + 1}
@@ -148,7 +132,7 @@ export default function HomePage() {
                     조회수 {post.viewCount}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </aside>
