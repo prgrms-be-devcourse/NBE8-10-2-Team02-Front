@@ -1,8 +1,16 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    qualities: [75, 85],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.igdb.com",
+        port: "",
+        pathname: "/igdb/image/upload/**",
+      },
+    ],
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
