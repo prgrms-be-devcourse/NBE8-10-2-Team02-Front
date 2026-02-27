@@ -23,15 +23,15 @@ export default function HomePage() {
   const { search } = useGameSearch();
 
   useEffect(() => {
-    // 1. 게시글 데이터 로드
-    apiFetch("/api/v1/posts?size=6&sort=id,desc").then((res) =>
-      setLatestPosts(res.data.content),
-    );
-    apiFetch("/api/v1/posts?size=6&sort=viewCount,desc").then((res) =>
-      setPopularPosts(res.data.content),
-    );
+    // .catch(() => {})를 추가하여 401 에러가 나도 조용히 넘어가게 합니다.
+    apiFetch("/api/v1/posts?size=6&sort=id,desc")
+      .then((res) => setLatestPosts(res.data.content))
+      .catch(() => console.log("Guest mode: latest posts load skipped"));
 
-    // 2. IGDB 인기 게임 로드
+    apiFetch("/api/v1/posts?size=6&sort=viewCount,desc")
+      .then((res) => setPopularPosts(res.data.content))
+      .catch(() => {});
+
     getIgdbPopularGames(10)
       .then(setIgdbPopularGames)
       .catch(() => {});
