@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 .idea/
+changes.txt
+diff_stat.txt
 
 # debug
 npm-debug.log*
