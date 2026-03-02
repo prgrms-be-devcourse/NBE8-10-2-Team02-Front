@@ -229,15 +229,23 @@ function LibraryContent() {
       <div className="w-full bg-[#111217]/80 backdrop-blur-md sticky top-16 z-40 py-8 px-6 border-b border-white/5 shadow-2xl mb-12">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h1 className="text-3xl font-black text-white tracking-tight mb-2">
-                내 라이브러리
-              </h1>
-              <p className="text-gray-500 text-sm">
-                {pageInfo
-                  ? `총 ${pageInfo.totalElements}개의 게임`
-                  : "게임 목록을 불러오는 중..."}
-              </p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+                  내 라이브러리
+                </h1>
+                <p className="text-gray-500 text-sm">
+                  {pageInfo
+                    ? `총 ${pageInfo.totalElements}개의 게임`
+                    : "게임 목록을 불러오는 중..."}
+                </p>
+              </div>
+              <Link
+                href="/library/import"
+                className="ml-auto bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-500 transition-all active:scale-95 text-sm shrink-0"
+              >
+                게임 가져오기
+              </Link>
             </div>
 
             {/* Filters */}
