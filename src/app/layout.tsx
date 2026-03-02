@@ -57,17 +57,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
     try {
       await logout();
+      
+      // ✅ [중요] 로그아웃 시 localStorage에 저장된 apiKey를 반드시 삭제!
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("apiKey");
+      }
+      
     } catch (err: any) {
       console.error(pickMsg(err, "로그아웃 실패"));
     } finally {
-      // UI 먼저 게스트로 돌림
       setAuth({ status: "guest", me: null });
-      // (선택) 일관성 있게 이벤트도 쏴줘도 됨
       window.dispatchEvent(new Event("auth:changed"));
-
       setLogoutPending(false);
       router.push("/");
-      router.refresh(); // 있어도 되고 없어도 됨
     }
   };
 
