@@ -48,7 +48,7 @@ export default function SearchFilterBar() {
   }, []);
 
   return (
-    <div className="flex gap-4 justify-center text-xs">
+    <div className="flex gap-4 justify-center text-xs text-black">
       {/* 장르 */}
       <select
         value={genre}
